@@ -52,6 +52,8 @@ interface Port-Channel2000
    switchport trunk group MLAGPEER
 !
 interface Ethernet1
+   switchport access vlan 10
+   ip address 192.168.10.1/24
    channel-group 1 mode active
 !
 interface Ethernet2
@@ -71,8 +73,14 @@ interface Ethernet6
    switchport mode trunk
    channel-group 2000 mode active
 !
-interface Loopback0
+interface Loopback1
    ip address 192.168.1.1/24
+!
+interface Loopback2
+   ip address 192.168.2.1/24
+!
+interface Loopback3
+   ip address 192.168.3.1/24
 !
 interface Management0
    vrf MGMT
@@ -104,6 +112,9 @@ ip route vrf MGMT 0.0.0.0/0 172.100.100.1
 !
 router ospf 1
    network 192.168.1.0/24 area 0.0.0.0
+   network 192.168.2.0/24 area 0.0.0.0
+   network 192.168.3.0/24 area 0.0.0.0
+   network 192.168.10.0/24 area 0.0.0.0
    max-lsa 12000
 !
 management ssh
