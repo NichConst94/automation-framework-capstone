@@ -52,11 +52,12 @@ interface Port-Channel2000
    switchport trunk group MLAGPEER
 !
 interface Ethernet1
+   no switchport
    ip address 192.168.10.2/24
-   channel-group 1 mode active
 !
 interface Ethernet2
-   channel-group 1 mode active
+   no switchport
+   ip address 192.168.12.1/24
 !
 interface Ethernet3
    channel-group 2 mode active
@@ -114,6 +115,7 @@ router ospf 2
    network 192.168.5.0/24 area 1.1.1.1
    network 192.168.6.0/24 area 1.1.1.1
    network 192.168.10.0/24 area 0.0.0.0
+   network 192.168.12.0/24 area 1.1.1.1
    max-lsa 12000
 !
 management ssh
