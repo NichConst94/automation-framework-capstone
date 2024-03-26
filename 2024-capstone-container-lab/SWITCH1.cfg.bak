@@ -10,8 +10,7 @@ daemon TerminAttr
    no shutdown
 !
 daemon ocprometheus
-   exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
-   no shutdown
+   exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6030 -username admin -password admin
 !
 transceiver qsfp default-mode 4x10G
 !
@@ -50,6 +49,16 @@ management api gnmi
       vrf MGMT
    provider eos-native
 !
+management api models
+   provider macsec
+   !
+   provider smash
+      path bridging
+      path forwarding/status
+      path routing
+      path routing/isis/lsdb
+      path routing/status
+!
 aaa authorization exec default local
 !
 interface Port-Channel1
@@ -65,13 +74,11 @@ interface Port-Channel2000
    switchport trunk group MLAGPEER
 !
 interface Ethernet1
-   no switchport
-   encapsulation dot1q vlan 10
-   ip address 192.168.10.1/24
+   channel-group 1 mode active
+   ip ospf area 0.0.0.0
 !
 interface Ethernet2
-   no switchport
-   ip address 192.168.11.1/24
+   channel-group 1 mode active
 !
 interface Ethernet3
    channel-group 2 mode active
@@ -86,15 +93,6 @@ interface Ethernet5
 interface Ethernet6
    switchport mode trunk
    channel-group 2000 mode active
-!
-interface Loopback1
-   ip address 192.168.1.1/24
-!
-interface Loopback2
-   ip address 192.168.2.1/24
-!
-interface Loopback3
-   ip address 192.168.3.1/24
 !
 interface Management0
    vrf MGMT
@@ -135,11 +133,6 @@ mlag configuration
 ip route vrf MGMT 0.0.0.0/0 172.100.100.1
 !
 router ospf 1
-   network 192.168.1.0/24 area 0.0.0.0
-   network 192.168.2.0/24 area 0.0.0.0
-   network 192.168.3.0/24 area 0.0.0.0
-   network 192.168.10.0/24 area 0.0.0.0
-   network 192.168.11.0/24 area 0.0.0.0
    max-lsa 12000
 !
 management ssh
