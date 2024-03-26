@@ -55,10 +55,10 @@ interface Ethernet1
    no switchport
    encapsulation dot1q vlan 10
    ip address 192.168.10.1/24
-   channel-group 1 mode active
 !
 interface Ethernet2
-   channel-group 1 mode active
+   no switchport
+   ip address 192.168.11.1/24
 !
 interface Ethernet3
    channel-group 2 mode active
