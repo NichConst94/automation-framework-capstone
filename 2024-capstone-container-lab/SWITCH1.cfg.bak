@@ -52,7 +52,8 @@ interface Port-Channel2000
    switchport trunk group MLAGPEER
 !
 interface Ethernet1
-   switchport access vlan 10
+   no switchport
+   encapsulation dot1q vlan 10
    ip address 192.168.10.1/24
    channel-group 1 mode active
 !
