@@ -109,6 +109,9 @@ router bgp 300
    neighbor 192.168.10.1 description Peer with SWITCH1
    neighbor 192.168.10.2 remote-as 200
    neighbor 192.168.10.2 description Peer with SWITCH2
+   network 192.168.7.0/24
+   network 192.168.8.0/24
+   network 192.168.9.0/24
 !
 management ssh
    vrf MGMT
