@@ -83,7 +83,6 @@ interface Ethernet1
 interface Ethernet2
    no switchport
    ip address 192.168.11.1/24
-   channel-group 1 mode active
 !
 interface Ethernet3
    channel-group 2 mode active
@@ -151,10 +150,6 @@ ip route vrf MGMT 0.0.0.0/0 172.100.100.1
 !
 router bgp 100
    router-id 1.1.1.1
-   neighbor 172.100.100.102 remote-as 200
-   neighbor 172.100.100.102 description Peer with SWITCH2
-   neighbor 172.100.100.103 remote-as 300
-   neighbor 172.100.100.103 description Peer with SWITCH3
    neighbor 192.168.10.2 remote-as 200
    neighbor 192.168.10.2 description Peer with SWITCH2
    neighbor 192.168.10.3 remote-as 300
@@ -166,10 +161,6 @@ router bgp 100
       network 192.168.1.0/24
       network 192.168.2.0/24
       network 192.168.3.0/24
-!
-router ospf 1
-   network 0.0.0.0/0 area 0.0.0.0
-   max-lsa 12000
 !
 management ssh
    vrf MGMT

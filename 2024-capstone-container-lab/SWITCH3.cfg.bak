@@ -54,12 +54,10 @@ interface Port-Channel2000
 interface Ethernet1
    no switchport
    ip address 192.168.11.2/24
-   channel-group 1999 mode active
 !
 interface Ethernet2
    no switchport
    ip address 192.168.12.2/24
-   channel-group 1999 mode active
 !
 interface Ethernet3
    switchport mode trunk
@@ -101,10 +99,6 @@ ip route vrf MGMT 0.0.0.0/0 172.100.100.1
 !
 router bgp 300
    router-id 3.3.3.3
-   neighbor 172.100.100.101 remote-as 100
-   neighbor 172.100.100.101 description Peer with SWITCH1
-   neighbor 172.100.100.102 remote-as 200
-   neighbor 172.100.100.102 description Peer with SWITCH2
    neighbor 192.168.10.1 remote-as 100
    neighbor 192.168.10.1 description Peer with SWITCH1
    neighbor 192.168.10.2 remote-as 200
