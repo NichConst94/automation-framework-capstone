@@ -52,9 +52,13 @@ interface Port-Channel2000
    switchport trunk group MLAGPEER
 !
 interface Ethernet1
-   channel-group 1 mode active
+   no switchport
+   ip address 192.168.10.2/24
+   ip ospf area 0.0.0.0
 !
 interface Ethernet2
+   no switchport
+   ip address 192.168.12.1/24
    channel-group 1 mode active
 !
 interface Ethernet3
@@ -70,6 +74,19 @@ interface Ethernet5
 interface Ethernet6
    switchport mode trunk
    channel-group 2000 mode active
+!
+interface Loopback0
+   ip address 192.168.3.1/24
+   ip ospf area 0.0.0.0
+!
+interface Loopback4
+   ip address 192.168.4.1/24
+!
+interface Loopback5
+   ip address 192.168.5.1/24
+!
+interface Loopback6
+   ip address 192.168.6.1/24
 !
 interface Management0
    vrf MGMT
@@ -98,6 +115,28 @@ mlag configuration
    peer-link Port-Channel2000
 !
 ip route vrf MGMT 0.0.0.0/0 172.100.100.1
+!
+router bgp 200
+   router-id 2.2.2.2
+   neighbor 172.100.100.101 remote-as 100
+   neighbor 172.100.100.101 description Peer with SWITCH1
+   neighbor 172.100.100.103 remote-as 300
+   neighbor 172.100.100.103 description Peer with SWITCH3
+   neighbor 192.168.10.1 remote-as 100
+   neighbor 192.168.10.1 description Peer with SWITCH1
+   neighbor 192.168.10.3 remote-as 300
+   neighbor 192.168.10.3 description Peer with SWITCH3
+   !
+   address-family ipv4
+      neighbor 192.168.10.1 activate
+      neighbor 192.168.10.3 activate
+      network 192.168.4.0/24
+      network 192.168.5.0/24
+      network 192.168.6.0/24
+!
+router ospf 1
+   network 0.0.0.0/0 area 0.0.0.0
+   max-lsa 12000
 !
 management ssh
    vrf MGMT
