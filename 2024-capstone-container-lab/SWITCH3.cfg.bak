@@ -5,6 +5,14 @@ no aaa root
 !
 username admin privilege 15 role network-admin secret sha512 $6$eucN5ngreuExDgwS$xnD7T8jO..GBDX0DUlp.hn.W7yW94xTjSanqgaQGBzPIhDAsyAl9N4oScHvOMvf07uVBFI4mKMxwdVEUVKgY/.
 !
+daemon TerminAttr
+   exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+   no shutdown
+!
+daemon ocprometheus
+   exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
+   no shutdown
+!
 transceiver qsfp default-mode 4x10G
 !
 service routing protocols model multi-agent
@@ -86,8 +94,18 @@ interface Management0
 interface Vlan4094
    ip address 172.16.0.1/30
 !
+ip access-list capstone
+   10 permit ip any any
+   20 permit tcp any any
+   30 permit tcp any any eq 8080
+   40 permit tcp any any eq 6042
+!
 ip routing
 no ip routing vrf MGMT
+!
+system control-plane
+   ip access-group capstone in
+   ip access-group capstone vrf MGMT in
 !
 mlag configuration
    domain-id MLAG
