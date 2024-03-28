@@ -46,7 +46,7 @@
             - neighbor_address: "192.168.10.2"
               remote_as: 200
               description: Peer with SWITCH2
-            - neighbor_address: "192.168.10.3"
+            - neighbor_address: "192.168.11.2"
               remote_as: 300
               description: Peer with SWITCH3
 
@@ -109,7 +109,7 @@
             - neighbor_address: "192.168.10.1"
               remote_as: 100
               description: Peer with SWITCH1
-            - neighbor_address: "192.168.10.3"
+            - neighbor_address: "192.168.12.2"
               remote_as: 300
               description: Peer with SWITCH3
 
@@ -174,10 +174,10 @@
           as_number: "300"
           router_id: 3.3.3.3
           neighbors:
-            - neighbor_address: "192.168.10.1"
+            - neighbor_address: "192.168.11.1"
               remote_as: 100
               description: Peer with SWITCH1
-            - neighbor_address: "192.168.10.2"
+            - neighbor_address: "192.168.12.1"
               remote_as: 200
               description: Peer with SWITCH2
 
