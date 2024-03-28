@@ -54,7 +54,6 @@ interface Port-Channel2000
 interface Ethernet1
    no switchport
    ip address 192.168.10.2/24
-   ip ospf area 0.0.0.0
 !
 interface Ethernet2
    no switchport
@@ -73,10 +72,6 @@ interface Ethernet5
 interface Ethernet6
    switchport mode trunk
    channel-group 2000 mode active
-!
-interface Loopback0
-   ip address 192.168.3.1/24
-   ip ospf area 0.0.0.0
 !
 interface Loopback4
    ip address 192.168.4.1/24
@@ -119,19 +114,11 @@ router bgp 200
    router-id 2.2.2.2
    neighbor 192.168.10.1 remote-as 100
    neighbor 192.168.10.1 description Peer with SWITCH1
-   neighbor 192.168.10.3 remote-as 300
-   neighbor 192.168.10.3 description Peer with SWITCH3
-   !
-   address-family ipv4
-      neighbor 192.168.10.1 activate
-      neighbor 192.168.10.3 activate
-      network 192.168.4.0/24
-      network 192.168.5.0/24
-      network 192.168.6.0/24
-!
-router ospf 1
-   network 0.0.0.0/0 area 0.0.0.0
-   max-lsa 12000
+   neighbor 192.168.12.2 remote-as 300
+   neighbor 192.168.12.2 description Peer with SWITCH3
+   network 192.168.4.0/24
+   network 192.168.5.0/24
+   network 192.168.6.0/24
 !
 management ssh
    vrf MGMT
