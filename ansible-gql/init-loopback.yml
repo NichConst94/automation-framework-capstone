@@ -1,0 +1,67 @@
+---
+- name: Query Nautobot Inventory and Save Output to File
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Query Nautobot Inventory using GraphQL
+      networktocode.nautobot.query_graphql:
+        url: "https://10.128.0.8"
+        token: "41ddbd050e13bd939fb266adcc5ecf20a24034fd"
+        query: |
+          {
+            devices {
+              name
+              interfaces {
+                name
+                description
+                mgmt_only
+                ip_addresses {
+                  address
+                }
+              }
+            }
+          }
+        validate_certs: false
+      register: graphql_output
+
+    - name: Save GraphQL output to a file
+      copy:
+        content: "{{ graphql_output.data }}"
+        dest: "/home/ubuntu/Desktop/ansible-gql/inventory"
+
+- name: Create Ansible Inventory from Saved GraphQL Output
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    inventory_file: "/home/ubuntu/Desktop/ansible-gql/inventory"
+  tasks:
+    - name: Read GraphQL output File
+      slurp:
+        src: "{{ inventory_file }}"
+      register: graphql_output_file
+
+    - name: Parse GraphQL Output
+      set_fact:
+        graphql_output_parsed: "{{ graphql_output_file.content | b64decode | from_json }}"
+
+    - name: Create Ansible Inventory
+      ansible.builtin.copy:
+        content: |
+          [all:vars]
+          ansible_connection = network_cli
+          ansible_network_os = eos
+          ansible_user = admin
+          ansible_password = admin
+          ansible_become = true
+          ansible_become_method = enable
+          ansible_become_password = admin
+          ansible_python_interpreter = /usr/bin/python3
+
+          [arista]
+          {% for device in graphql_output_parsed.devices %}
+          {{ device.name }} ansible_host={{ device.interfaces[0].ip_addresses[0].address.split('/')[0] }}
+          {% endfor %}
+        dest: "/home/ubuntu/Desktop/ansible-gql/inventory"
+
+

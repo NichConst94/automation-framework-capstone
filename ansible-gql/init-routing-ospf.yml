@@ -1,0 +1,192 @@
+---
+- name: Configure Routing on SWITCH1
+  hosts: SWITCH1
+  gather_facts: no
+  connection: network_cli
+  vars:
+    ansible_network_os: eos
+
+
+  tasks:
+    - name: Configure routing on Ethernet1 and Ethernet2
+      arista.eos.eos_interfaces:
+        config:
+          - name: Ethernet1
+            enabled: true
+            mode: layer3
+          - name: Ethernet2
+            enabled: true
+            mode: layer3
+
+    - name: Configure Loopback interfaces 1-3, Ethernet1-2 on SWITCH1
+      eos_l3_interfaces:
+        config:
+          - name: Loopback1
+            ipv4:
+             - address: 192.168.1.1/24
+          - name: Loopback2
+            ipv4:
+             - address: 192.168.2.1/24
+          - name: Loopback3
+            ipv4:
+             - address: 192.168.3.1/24
+          - name: Ethernet1
+            ipv4:
+             - address: 192.168.10.1/24
+          - name: Ethernet2
+            ipv4:
+             - address: 192.168.11.1/24
+
+    
+
+
+    - name: Configure OSPF on SWITCH1
+      arista.eos.eos_ospfv2:
+        config:
+          processes:
+            - process_id: 1
+              areas:
+                - area_id: 0.0.0.0 
+              networks:
+                - area: 0.0.0.0
+                  prefix: 192.168.1.0/24      
+                - area: 0.0.0.0
+                  prefix: 192.168.2.0/24               
+                - area: 0.0.0.0
+                  prefix: 192.168.3.0/24
+                - area: 0.0.0.0
+                  prefix: 192.168.10.0/24
+                - area: 0.0.0.0
+                  prefix: 192.168.11.0/24  
+                
+
+
+###############################################################################################              
+
+
+
+
+- name: Configure Routing on SWITCH2
+  hosts: SWITCH2
+  gather_facts: no
+  connection: network_cli
+  vars:
+    ansible_network_os: eos
+
+
+  tasks:
+    - name: Configure routing on Ethernet1 and Ethernet2
+      arista.eos.eos_interfaces:
+        config:
+          - name: Ethernet1
+            enabled: true
+            mode: layer3
+          - name: Ethernet2
+            enabled: true
+            mode: layer3
+
+    - name: Configure Loopback interfaces 4-6, Ethernet1-2 on SWITCH2
+      eos_l3_interfaces:
+        config:
+          - name: Loopback4
+            ipv4:
+             - address: 192.168.4.1/24
+          - name: Loopback5
+            ipv4:
+             - address: 192.168.5.1/24
+          - name: Loopback6
+            ipv4:
+             - address: 192.168.6.1/24
+          - name: Ethernet1
+            ipv4:
+             - address: 192.168.10.2/24
+          - name: Ethernet2
+            ipv4:
+             - address: 192.168.12.1/24
+          
+
+    - name: Configure OSPF on SWITCH2
+      arista.eos.eos_ospfv2:
+        config:
+          processes:
+            - process_id: 2
+              areas:
+                - area_id: 0.0.0.0
+                - area_id: 1.1.1.1 
+              networks:
+                - area: 1.1.1.1
+                  prefix: 192.168.4.0/24      
+                - area: 1.1.1.1
+                  prefix: 192.168.5.0/24               
+                - area: 1.1.1.1
+                  prefix: 192.168.6.0/24
+                - area: 0.0.0.0
+                  prefix: 192.168.10.0/24
+                - area: 1.1.1.1
+                  prefix: 192.168.12.0/24
+                
+
+
+########################################################
+
+
+
+- name: Configure Routing on SWITCH3
+  hosts: SWITCH3
+  gather_facts: no
+  connection: network_cli
+  vars:
+    ansible_network_os: eos
+
+
+  tasks:
+    - name: Configure routing on Ethernet1 and Ethernet2
+      arista.eos.eos_interfaces:
+        config:
+          - name: Ethernet1
+            enabled: true
+            mode: layer3
+          - name: Ethernet2
+            enabled: true
+            mode: layer3
+
+    - name: Configure Loopback interfaces 7-9, Ethernet1-2 on SWITCH3
+      eos_l3_interfaces:
+        config:
+          - name: Loopback7
+            ipv4:
+             - address: 192.168.7.1/24
+          - name: Loopback8
+            ipv4:
+             - address: 192.168.8.1/24
+          - name: Loopback9
+            ipv4:
+             - address: 192.168.9.1/24
+          - name: Ethernet1
+            ipv4:
+             - address: 192.168.11.2/24
+          - name: Ethernet2
+            ipv4:
+             - address: 192.168.12.2/24
+            
+
+
+    - name: Configure OSPF on SWITCH3
+      arista.eos.eos_ospfv2:
+        config:
+          processes:
+            - process_id: 3
+              areas:
+                - area_id: 0.0.0.0
+                - area_id: 1.1.1.1 
+              networks:
+                - area: 1.1.1.1
+                  prefix: 192.168.7.0/24      
+                - area: 1.1.1.1
+                  prefix: 192.168.8.0/24               
+                - area: 1.1.1.1
+                  prefix: 192.168.9.0/24
+                - area: 0.0.0.0
+                  prefix: 192.168.11.0/24
+                - area: 1.1.1.1
+                  prefix: 192.168.12.0/24
