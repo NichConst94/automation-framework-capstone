@@ -28,8 +28,6 @@ management api http-commands
 aaa authorization exec default local
 !
 interface Ethernet1
-   no switchport
-   ip address 192.168.1.2/24
 !
 interface Ethernet2
 !
