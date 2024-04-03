@@ -1,0 +1,24 @@
+{% if config_context["acl"] is defined %}
+{% if config_context["acl"]["interfaces"] is defined %}
+{% if config_context["acl"]["interfaces"][interface["name"]] is defined %}
+   ip access-group {{ config_context["acl"]["interfaces"][interface["name"]]["acl"] }} {{ config_context["acl"]["interfaces"][interface["name"]]["direction"] }}
+{% endif %}
+{% endif %}
+{% endif %}
+{% if interface["ip_addresses"] | length > 0 %}
+   no switchport
+{% endif %}
+{% if interface["mac_address"] != none %}
+   mac-address {{ interface["mac_address"] }}
+{% endif %}
+{% if interface["ip_addresses"] | length > 0 %}
+{% for addr in interface["ip_addresses"] %}
+{% if addr["address"] is defined %}
+   ip address {{ addr["address"] }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if interface["enabled"] == false %}
+   shutdown
+{% endif %}
+!
