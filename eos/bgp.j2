@@ -2,7 +2,7 @@ router bgp {{ config_context["bgp"]["asn"] }}
    router-id {{ config_context["bgp"]["rid"] }}
 {% for neighbor in config_context["bgp"]["neighbors"] %}
    neighbor {{ neighbor["ip"] }} remote-as {{ neighbor["remote-asn"] }}
-   description {{neighbor["description"]}}
+   neighbor {{ neighbor["ip"] }} description {{neighbor["description"]}}
 {% endfor %}
 {% for network in config_context["bgp"]["networks"] %}
    network {{ network }}
