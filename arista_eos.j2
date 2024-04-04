@@ -6,6 +6,8 @@ spanning-tree mode mstp
 !
 {% include './eos/local_user.j2' %}
 !
+{% include './eos/ocprometheus.j2' %}
+!
 {% include './eos/interfaces.j2' %}
 !
 {% if config_context["routes"] is defined %}
