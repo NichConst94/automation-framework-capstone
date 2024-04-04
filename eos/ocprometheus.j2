@@ -1,0 +1,19 @@
+{% if config_context["ocprometheus"] is defined %}
+ip access-list capstone
+	permit ip any any
+	permit tcp any any
+	permit tcp any any eq 8080
+	permit tcp any any eq 6042
+!
+system control-plane
+	ip access-group capstone in
+	ip access-group capstone vrf MGMT in
+!
+daemon TerminAttr
+  exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+  no shutdown
+!
+daemon ocprometheus
+  exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
+  no shutdown
+{% endif %}
