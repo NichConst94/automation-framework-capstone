@@ -1,0 +1,45 @@
+- name: Configure Prometheus on SWITCH1
+  hosts: SWITCH1
+  gather_facts: false
+  connection: network_cli
+  vars:
+    ansible_network_os: eos
+  tasks:
+    - name: Create ACL
+      arista.eos.eos_acls:
+        config:
+          - afi: ipv4
+            acls:
+              - name: capstone
+                standard: false
+                aces:
+                  - sequence: 10
+                    grant: permit
+                    protocol: ip
+                    source:
+                      any: true
+                    destination:
+                      any: true
+                  - sequence: 20
+                    grant: permit
+                    protocol: tcp
+                    source:
+                      any: true
+                    destination:
+                      any: true
+                  - sequence: 30
+                    grant: permit
+                    protocol: tcp
+                    source:
+                      any: true
+                    destination:
+                      any: true
+                      # dport: 8080 fix port later
+                  - sequence: 40
+                    grant: permit
+                    protocol: tcp
+                    source:
+                      any: true
+                    destination:
+                      any: true
+                      # dport: 6042 fix port later

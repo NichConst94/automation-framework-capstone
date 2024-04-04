@@ -1,0 +1,182 @@
+- name: Configure BGP on SWITCH1
+  hosts: SWITCH1
+  gather_facts: false
+  connection: network_cli
+  vars:
+    ansible_network_os: eos
+  tasks:
+    - name: Create Ethernet1 and Ethernet2 Internal Interfaces
+      arista.eos.eos_interfaces:
+        config:
+          - name: Ethernet1
+            enabled: true
+            mode: layer3
+          - name: Ethernet2
+            enabled: true
+            mode: layer3
+    - name: Configure Loopback Interfaces 1-3, Ethernet 1-2 IP Addresses on SWITCH1
+      arista.eos.eos_l3_interfaces:
+        config:
+          - name: Loopback1
+            ipv4:
+              - address: 192.168.1.1/24
+          - name: Loopback2
+            ipv4:
+              - address: 192.168.2.1/24
+          - name: Loopback3
+            ipv4:
+              - address: 192.168.3.1/24
+          - name: Ethernet1
+            ipv4:
+              - address: 192.168.10.1/30
+          - name: Ethernet2
+            ipv4:
+              - address: 192.168.11.1/30
+    - name: Establish BGP Peers on SWITCH1
+      arista.eos.eos_bgp_global:
+        config:
+          as_number: '100'
+          router_id: 1.1.1.1
+          neighbors:
+            - neighbor_address: 192.168.10.2
+              remote_as: 200
+              description: Peer with SWITCH2
+              encryption_password:
+                password: '@Stout2024'
+                type: 0
+            - neighbor_address: 192.168.11.2
+              remote_as: 300
+              description: Peer with SWITCH3
+              encryption_password:
+                password: '@Stout2024'
+                type: 0
+    - name: Advertise Networks on SWITCH1
+      arista.eos.eos_bgp_global:
+        config:
+          as_number: '100'
+          networks:
+            - address: 192.168.1.0/24
+            - address: 192.168.2.0/24
+            - address: 192.168.3.0/24
+#######################################################################################################
+- name: Configure BGP on SWITCH2
+  hosts: SWITCH2
+  gather_facts: false
+  connection: network_cli
+  vars:
+    ansible_network_os: eos
+  tasks:
+    - name: Create Ethernet1 and Ethernet2 Internal Interfaces
+      arista.eos.eos_interfaces:
+        config:
+          - name: Ethernet1
+            enabled: true
+            mode: layer3
+          - name: Ethernet2
+            enabled: true
+            mode: layer3
+    - name: Configure Loopback Interfaces 4-6, Ethernet 1-2 IP Addresses on SWITCH2
+      arista.eos.eos_l3_interfaces:
+        config:
+          - name: Loopback4
+            ipv4:
+              - address: 192.168.4.1/24
+          - name: Loopback5
+            ipv4:
+              - address: 192.168.5.1/24
+          - name: Loopback6
+            ipv4:
+              - address: 192.168.6.1/24
+          - name: Ethernet1
+            ipv4:
+              - address: 192.168.10.2/30
+          - name: Ethernet2
+            ipv4:
+              - address: 192.168.12.1/30
+    - name: Establish BGP Peers on SWITCH2
+      arista.eos.eos_bgp_global:
+        config:
+          as_number: '200'
+          router_id: 2.2.2.2
+          neighbors:
+            - neighbor_address: 192.168.10.1
+              remote_as: 100
+              description: Peer with SWITCH1
+              encryption_password:
+                password: '@Stout2024'
+                type: 0
+            - neighbor_address: 192.168.12.2
+              remote_as: 300
+              description: Peer with SWITCH3
+              encryption_password:
+                password: '@Stout2024'
+                type: 0
+    - name: Advertise Networks on SWITCH2
+      arista.eos.eos_bgp_global:
+        config:
+          as_number: '200'
+          networks:
+            - address: 192.168.4.0/24
+            - address: 192.168.5.0/24
+            - address: 192.168.6.0/24
+#######################################################################################################
+- name: Configure BGP on SWITCH3
+  hosts: SWITCH3
+  gather_facts: false
+  connection: network_cli
+  vars:
+    ansible_network_os: eos
+  tasks:
+    - name: Create Ethernet1 and Ethernet2 Internal Interfaces
+      arista.eos.eos_interfaces:
+        config:
+          - name: Ethernet1
+            enabled: true
+            mode: layer3
+          - name: Ethernet2
+            enabled: true
+            mode: layer3
+    - name: Configure Loopback Interfaces 7-9, Ethernet 1-2 IP Addresses on SWITCH3
+      arista.eos.eos_l3_interfaces:
+        config:
+          - name: Loopback7
+            ipv4:
+              - address: 192.168.7.1/24
+          - name: Loopback8
+            ipv4:
+              - address: 192.168.8.1/24
+          - name: Loopback9
+            ipv4:
+              - address: 192.168.9.1/24
+          - name: Ethernet1
+            ipv4:
+              - address: 192.168.11.2/30
+          - name: Ethernet2
+            ipv4:
+              - address: 192.168.12.2/30
+    - name: Establish BGP Peers on SWITCH3
+      arista.eos.eos_bgp_global:
+        config:
+          as_number: '300'
+          router_id: 3.3.3.3
+          neighbors:
+            - neighbor_address: 192.168.11.1
+              remote_as: 100
+              description: Peer with SWITCH1
+              encryption_password:
+                password: '@Stout2024'
+                type: 0
+            - neighbor_address: 192.168.12.1
+              remote_as: 200
+              description: Peer with SWITCH2
+              encryption_password:
+                password: '@Stout2024'
+                type: 0
+    - name: Advertise Networks on SWITCH3
+      arista.eos.eos_bgp_global:
+        config:
+          as_number: '300'
+          networks:
+            - address: 192.168.7.0/24
+            - address: 192.168.8.0/24
+            - address: 192.168.9.0/24
