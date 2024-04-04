@@ -2,8 +2,7 @@ router bgp {{ config_context["bgp"]["asn"] }}
    router-id {{ config_context["bgp"]["rid"] }}
 {% for neighbor in config_context["bgp"]["neighbors"] %}
    neighbor {{ neighbor["ip"] }} remote-as {{ neighbor["remote-asn"] }}
-   neighbor {{ neighbor["ip"] }} maximum-routes 12000
 {% endfor %}
-{% if config_context["bgp"]["redistribute"]|length > 0 %}
-   redistribute {{ config_context["bgp"]["redistribute"]|join(' ') }}
-{% endif %}
+{% for network in config_context["bgp"]["networks"] %}
+   network {{ network }}
+{% endfor %}
