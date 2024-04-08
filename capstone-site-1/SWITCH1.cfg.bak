@@ -50,6 +50,8 @@ ip access-list capstone
    20 permit tcp any any
    30 permit tcp any any
    40 permit tcp any any
+   50 permit tcp any any eq 8080
+   60 permit tcp any any eq 6042
 !
 ip routing
 no ip routing vrf MGMT
