@@ -4,9 +4,8 @@ pipeline {
     stages {
         stage('Ansible Lint') {
             steps {
-                sh 'ansible-lint --version'
-                sh 'ansible-lint bgp.yml'
-                //sh 'ansible-lint bgp2.yml'//
+                sh 'ansible-lint ansible-gql/old playbooks/old-init-routing-bgp'
+                //sh 'ansible-lint ansible-gql/init-routing-bgp.yml'//
             }
         }
     }
