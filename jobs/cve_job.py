@@ -1,7 +1,6 @@
 from nautobot.core.celery import register_jobs
 from nautobot.apps.jobs import Job
 from nautobot_device_lifecycle_mgmt.models import CVELCM, SoftwareLCM
-from nautobot_device_lifecycle_mgmt import choices
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
