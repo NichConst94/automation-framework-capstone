@@ -114,7 +114,6 @@ class ProvisionCVE(Job):
                         ios_xe_softwares.append(f"Cisco IOS-XE - {pack}")
 
                 if ios_softwares or ios_xe_softwares:
-
                     cve_object = None
                     cve_date = json_data['document']['tracking']['initial_release_date']
                     cve_date = cve_date[:10]
