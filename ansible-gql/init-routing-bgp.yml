@@ -3,7 +3,14 @@
   gather_facts: false
   connection: network_cli
   vars:
+    ansible_connection: network_cli
     ansible_network_os: eos
+    ansible_user: admin
+    ansible_password: admin
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: admin
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
     - name: Create Ethernet1 and Ethernet2 Internal Interfaces
       arista.eos.eos_interfaces:
@@ -64,7 +71,14 @@
   gather_facts: false
   connection: network_cli
   vars:
+    ansible_connection: network_cli
     ansible_network_os: eos
+    ansible_user: admin
+    ansible_password: admin
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: admin
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
     - name: Create Ethernet1 and Ethernet2 Internal Interfaces
       arista.eos.eos_interfaces:
@@ -125,7 +139,14 @@
   gather_facts: false
   connection: network_cli
   vars:
+    ansible_connection: network_cli
     ansible_network_os: eos
+    ansible_user: admin
+    ansible_password: admin
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: admin
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
     - name: Create Ethernet1 and Ethernet2 Internal Interfaces
       arista.eos.eos_interfaces:

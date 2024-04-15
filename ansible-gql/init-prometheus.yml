@@ -3,7 +3,14 @@
   gather_facts: false
   connection: network_cli
   vars:
+    ansible_connection: network_cli
     ansible_network_os: eos
+    ansible_user: admin
+    ansible_password: admin
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: admin
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
     - name: Copy Prometheus Configuration Files to SWITCH1 (1/2)
       ansible.builtin.copy:
@@ -31,17 +38,17 @@
     - name: Initialize Prometheus Daemon on SWITCH1
       arista.eos.eos_command:
         commands:
-          - command: configure terminal
-          - command: system control-plane
-          - command: ip access-group capstone in
-          - command: ip access-group capstone vrf MGMT in
-          - command: daemon TerminAttr
-          - command: exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
-          - command: no shutdown
-          - command: daemon ocprometheus
-          - command: exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus
+          - configure terminal
+          - system control-plane
+          - ip access-group capstone in
+          - ip access-group capstone vrf MGMT in
+          - daemon TerminAttr
+          - exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+          - no shutdown
+          - daemon ocprometheus
+          - exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus
               -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
-          - command: no shutdown
+          - no shutdown
 
 ########################################################################################
 
@@ -50,7 +57,14 @@
   gather_facts: false
   connection: network_cli
   vars:
+    ansible_connection: network_cli
     ansible_network_os: eos
+    ansible_user: admin
+    ansible_password: admin
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: admin
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
     - name: Copy Prometheus Configuration Files to SWITCH2 (1/2)
       ansible.builtin.copy:
@@ -78,17 +92,17 @@
     - name: Initialize Prometheus Daemon on SWITCH2
       arista.eos.eos_command:
         commands:
-          - command: configure terminal
-          - command: system control-plane
-          - command: ip access-group capstone in
-          - command: ip access-group capstone vrf MGMT in
-          - command: daemon TerminAttr
-          - command: exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
-          - command: no shutdown
-          - command: daemon ocprometheus
-          - command: exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus
+          - configure terminal
+          - system control-plane
+          - ip access-group capstone in
+          - ip access-group capstone vrf MGMT in
+          - daemon TerminAttr
+          - exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+          - no shutdown
+          - daemon ocprometheus
+          - exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus
               -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
-          - command: no shutdown
+          - no shutdown
 
 ########################################################################################
 
@@ -97,7 +111,14 @@
   gather_facts: false
   connection: network_cli
   vars:
+    ansible_connection: network_cli
     ansible_network_os: eos
+    ansible_user: admin
+    ansible_password: admin
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: admin
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
     - name: Copy Prometheus Configuration Files to SWITCH3 (1/2)
       ansible.builtin.copy:
@@ -125,14 +146,14 @@
     - name: Initialize Prometheus Daemon on SWITCH3
       arista.eos.eos_command:
         commands:
-          - command: configure terminal
-          - command: system control-plane
-          - command: ip access-group capstone in
-          - command: ip access-group capstone vrf MGMT in
-          - command: daemon TerminAttr
-          - command: exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
-          - command: no shutdown
-          - command: daemon ocprometheus
-          - command: exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus
+          - configure terminal
+          - system control-plane
+          - ip access-group capstone in
+          - ip access-group capstone vrf MGMT in
+          - daemon TerminAttr
+          - exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+          - no shutdown
+          - daemon ocprometheus
+          - exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus
               -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
-          - command: no shutdown
+          - no shutdown
