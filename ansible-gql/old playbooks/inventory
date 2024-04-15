@@ -1,0 +1,14 @@
+[all:vars]
+ansible_connection = network_cli
+ansible_network_os = eos
+ansible_user = admin
+ansible_password = admin
+ansible_become = true
+ansible_become_method = enable
+ansible_become_password = admin
+ansible_python_interpreter = /usr/bin/python3
+
+[arista]
+SWITCH1 ansible_host=172.100.100.101
+SWITCH2 ansible_host=172.100.100.102
+SWITCH3 ansible_host=172.100.100.103
