@@ -5,14 +5,6 @@ no aaa root
 !
 username admin privilege 15 role network-admin secret sha512 $6$eucN5ngreuExDgwS$xnD7T8jO..GBDX0DUlp.hn.W7yW94xTjSanqgaQGBzPIhDAsyAl9N4oScHvOMvf07uVBFI4mKMxwdVEUVKgY/.
 !
-daemon TerminAttr
-   exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
-   no shutdown
-!
-daemon ocprometheus
-   exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
-   no shutdown
-!
 transceiver qsfp default-mode 4x10G
 !
 service routing protocols model multi-agent
@@ -36,54 +28,19 @@ management api http-commands
 aaa authorization exec default local
 !
 interface Ethernet1
-   no switchport
-   ip address 192.168.10.1/30
 !
 interface Ethernet2
-   no switchport
-   ip address 192.168.11.1/30
 !
 interface Ethernet3
-!
-interface Loopback1
-   ip address 192.168.1.1/24
-!
-interface Loopback2
-   ip address 192.168.2.1/24
-!
-interface Loopback3
-   ip address 192.168.3.1/24
 !
 interface Management0
    vrf MGMT
    ip address 172.100.100.101/24
 !
-ip access-list capstone
-   10 permit ip any any
-   20 permit tcp any any
-   30 permit tcp any any eq 8080
-   40 permit tcp any any eq 6042
-!
 ip routing
 no ip routing vrf MGMT
 !
-system control-plane
-   ip access-group capstone in
-   ip access-group capstone vrf MGMT in
-!
 ip route vrf MGMT 0.0.0.0/0 172.100.100.1
-!
-router bgp 100
-   router-id 1.1.1.1
-   neighbor 192.168.10.2 remote-as 200
-   neighbor 192.168.10.2 description Peer with SWITCH2
-   neighbor 192.168.10.2 password 7 Rw3j1BPV6VRDwOP14kg3IA==
-   neighbor 192.168.11.2 remote-as 300
-   neighbor 192.168.11.2 description Peer with SWITCH3
-   neighbor 192.168.11.2 password 7 Rw3j1BPV6VRDwOP14kg3IA==
-   network 192.168.1.0/24
-   network 192.168.2.0/24
-   network 192.168.3.0/24
 !
 management ssh
    vrf MGMT
