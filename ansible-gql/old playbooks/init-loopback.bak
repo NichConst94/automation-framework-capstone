@@ -1,0 +1,30 @@
+---
+- name: Query Nautobot Inventory and Save Output to File
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Query Nautobot Inventory using GraphQL
+      networktocode.nautobot.query_graphql:
+        url: "https://10.128.0.8"
+        token: "41ddbd050e13bd939fb266adcc5ecf20a24034fd"
+        query: |
+          {
+            devices {
+              name
+              interfaces {
+                name
+                description
+                mgmt_only
+                ip_addresses {
+                  address
+                }
+              }
+            }
+          }
+        validate_certs: false
+      register: graphql_output
+
+    - name: Save GraphQL output to a file
+      copy:
+        content: "{{ graphql_output.data }}"
+        dest: "/home/ubuntu/Desktop/ansible-gql/inventory"

@@ -1,0 +1,159 @@
+- name: Configure Prometheus on SWITCH1
+  hosts: SWITCH1
+  gather_facts: false
+  connection: network_cli
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: eos
+    ansible_user: admin
+    ansible_password: admin
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: admin
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: Copy Prometheus Configuration Files to SWITCH1 (1/2)
+      ansible.builtin.copy:
+        src: /home/ubuntu/Desktop/ansible-gql/prometheus/ocprometheus
+        dest: /mnt/flash/
+        mode: '0777'
+        group: root
+
+    - name: Copy Prometheus Configuration Files to SWITCH1 (2/2)
+      ansible.builtin.copy:
+        src: /home/ubuntu/Desktop/ansible-gql/prometheus/ocprometheus.yml
+        dest: /mnt/flash/
+        mode: '0777'
+        group: root
+
+    - name: Create ACL
+      arista.eos.eos_config:
+        lines:
+          - permit ip any any
+          - permit tcp any any
+          - permit tcp any any eq 8080
+          - permit tcp any any eq 6042
+        parents: ip access-list capstone
+
+    - name: Initialize Prometheus Daemon on SWITCH1
+      arista.eos.eos_command:
+        commands:
+          - configure terminal
+          - system control-plane
+          - ip access-group capstone in
+          - ip access-group capstone vrf MGMT in
+          - daemon TerminAttr
+          - exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+          - no shutdown
+          - daemon ocprometheus
+          - exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus
+              -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
+          - no shutdown
+
+########################################################################################
+
+- name: Configure Prometheus on SWITCH2
+  hosts: SWITCH2
+  gather_facts: false
+  connection: network_cli
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: eos
+    ansible_user: admin
+    ansible_password: admin
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: admin
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: Copy Prometheus Configuration Files to SWITCH2 (1/2)
+      ansible.builtin.copy:
+        src: /home/ubuntu/Desktop/ansible-gql/prometheus/ocprometheus
+        dest: /mnt/flash/
+        mode: '0777'
+        group: root
+
+    - name: Copy Prometheus Configuration Files to SWITCH2 (2/2)
+      ansible.builtin.copy:
+        src: /home/ubuntu/Desktop/ansible-gql/prometheus/ocprometheus.yml
+        dest: /mnt/flash/
+        mode: '0777'
+        group: root
+
+    - name: Create ACL
+      arista.eos.eos_config:
+        lines:
+          - permit ip any any
+          - permit tcp any any
+          - permit tcp any any eq 8080
+          - permit tcp any any eq 6042
+        parents: ip access-list capstone
+
+    - name: Initialize Prometheus Daemon on SWITCH2
+      arista.eos.eos_command:
+        commands:
+          - configure terminal
+          - system control-plane
+          - ip access-group capstone in
+          - ip access-group capstone vrf MGMT in
+          - daemon TerminAttr
+          - exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+          - no shutdown
+          - daemon ocprometheus
+          - exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus
+              -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
+          - no shutdown
+
+########################################################################################
+
+- name: Configure Prometheus on SWITCH3
+  hosts: SWITCH3
+  gather_facts: false
+  connection: network_cli
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: eos
+    ansible_user: admin
+    ansible_password: admin
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: admin
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: Copy Prometheus Configuration Files to SWITCH3 (1/2)
+      ansible.builtin.copy:
+        src: /home/ubuntu/Desktop/ansible-gql/prometheus/ocprometheus
+        dest: /mnt/flash/
+        mode: '0777'
+        group: root
+
+    - name: Copy Prometheus Configuration Files to SWITCH3 (2/2)
+      ansible.builtin.copy:
+        src: /home/ubuntu/Desktop/ansible-gql/prometheus/ocprometheus.yml
+        dest: /mnt/flash/
+        mode: '0777'
+        group: root
+
+    - name: Create ACL
+      arista.eos.eos_config:
+        lines:
+          - permit ip any any
+          - permit tcp any any
+          - permit tcp any any eq 8080
+          - permit tcp any any eq 6042
+        parents: ip access-list capstone
+
+    - name: Initialize Prometheus Daemon on SWITCH3
+      arista.eos.eos_command:
+        commands:
+          - configure terminal
+          - system control-plane
+          - ip access-group capstone in
+          - ip access-group capstone vrf MGMT in
+          - daemon TerminAttr
+          - exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+          - no shutdown
+          - daemon ocprometheus
+          - exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus
+              -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
+          - no shutdown
