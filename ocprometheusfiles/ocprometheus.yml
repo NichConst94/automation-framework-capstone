@@ -1,4 +1,4 @@
- # Subscriptions to OpenConfig paths.
+ # Subscriptions to EOS-Native paths.
 subscriptions:
         - /Kernel/proc/cpu/utilization/
         - /Sysdb/interface/status/eth/phy/slice/1/intfStatus/
