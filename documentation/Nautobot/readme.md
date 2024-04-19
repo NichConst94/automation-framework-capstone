@@ -26,7 +26,6 @@ In this section, we will be creating the base google cloud VM that the nautobot 
             1. Network tags: nautobot-server
             2. Ip forwarding: Enable
     6. Create
- 
 6.	Once the instance is created, go to VM Instances, select the SSH button on the created Nautobot server to confirm connectivity.
 7.	Run the command “sudo apt update && sudo apt upgrade -y”
 8.	Ping the address of one of the switches in the container lab environment. If this fails, ensure container lab is running, and the route to the container switches has been created. Once this succeeds, your instance creation has been completed. 
@@ -110,7 +109,223 @@ PLUGINS_CONFIG = {
 }
 ```
 
+5. Save and exit the configuration file
+6. Use the following commands to add our needed plugins into a local requirements file, and then install them.
+    1.     echo nautobot[napalm] >> $NAUTOBOT_ROOT/local_requirements.txt
+    2.     echo nautobot-device-onboarding >> $NAUTOBOT_ROOT/local_requirements.txt
+    3.     echo nautobot-golden-config >> $NAUTOBOT_ROOT/local_requirements.txt
+    4.     echo nautobot-plugin-nornir >> $NAUTOBOT_ROOT/local_requirements.txt
+    5.     pip3 install -r $NAUTOBOT_ROOT/local_requirements.txt
+7.	Use the below commands to set up the database, create the admin user, create needed files, then check the server for errors
+    1.     nautobot-server migrate
+         1. This may take a few minutes.
+    2.     nautobot-server createsuperuser
+         1. Username: admin
+         2. Email: Any
+         3. Password: @Stout2024
+    3.     nautobot-server collectstatic
+    4.     nautobot-server check
+    5. If there are no issues identified, procede to allow HTTPS access to Nautobot with self signed certificates and create service files
+8. Use the below command to create a file known as uwsgi.ini
+     1.     nano $NAUTOBOT_ROOT/uwsgi.ini
+          1. Add the below code to the file. This code can be found in the official Nautobot documentation
+```
+[uwsgi]
+; The IP address (typically localhost) and port that the WSGI process should listen on
+socket = 127.0.0.1:8001
+; Fail to start if any parameter in the configuration file isn’t explicitly understood by uWSGI
+strict = true
+; Enable master process to gracefully re-spawn and pre-fork workers
+master = true
+; Allow Python app-generated threads to run
+enable-threads = true
+;Try to remove all of the generated file/sockets during shutdown
+vacuum = true
+; Do not use multiple interpreters, allowing only Nautobot to run
+single-interpreter = true
+; Shutdown when receiving SIGTERM (default is respawn)
+die-on-term = true
+; Prevents uWSGI from starting if it is unable load Nautobot (usually due to errors)
+need-app = true
+; By default, uWSGI has rather verbose logging that can be noisy
+disable-logging = true
+; Assert that critical 4xx and 5xx errors are still logged
+log-4xx = true
+log-5xx = true
+; Enable HTTP 1.1 keepalive support
+http-keepalive = 1
+ 
+;
+; Advanced settings (disabled by default)
+; Customize these for your environment if and only if you need them.
+; Ref: https://uwsgi-docs.readthedocs.io/en/latest/Options.html
+;
+; Number of uWSGI workers to spawn. This should typically be 2n+1, where n is the number of CPU cores present.
+; processes = 5
+; If using subdirectory hosting e.g. example.com/nautobot, you must uncomment this line. Otherwise you'll get double paths e.g. example.com/nautobot/nautobot/.
+; Ref: https://uwsgi-docs.readthedocs.io/en/latest/Changelog-2.0.11.html#fixpathinfo-routing-action
+; route-run = fixpathinfo:
+; If hosted behind a load balancer uncomment these lines, the harakiri timeout should be greater than your load balancer timeout.
+; Ref: https://uwsgi-docs.readthedocs.io/en/latest/HTTP.html?highlight=keepalive#http-keep-alive
+; harakiri = 65
+; add-header = Connection: Keep-Alive
+; http-keepalive = 1
+```
 
+9. Exit out of the nautobot user
+    1.     exit
+10. Use the below command to create a Nautobot service file
+     1.     sudo nano /etc/systemd/system/nautobot.service
+          1. Add the below code to the file. This code can be found in the official Nautobot documentation
+```
+[Unit]
+Description=Nautobot WSGI Service
+Documentation=https://docs.nautobot.com/projects/core/en/stable/
+After=network-online.target
+Wants=network-online.target
+ 
+[Service]
+Type=simple
+Environment="NAUTOBOT_ROOT=/opt/nautobot"
+ 
+User=nautobot
+Group=nautobot
+PIDFile=/var/tmp/nautobot.pid
+WorkingDirectory=/opt/nautobot
+ExecStart=/opt/nautobot/bin/nautobot-server start --pidfile /var/tmp/nautobot.pid --ini /opt/nautobot/uwsgi.ini
+ExecStop=/opt/nautobot/bin/nautobot-server start --stop /var/tmp/nautobot.pid
+ExecReload=/opt/nautobot/bin/nautobot-server start --reload /var/tmp/nautobot.pid
+ 
+Restart=on-failure
+RestartSec=30
+PrivateTmp=true
+ 
+[Install]
+WantedBy=multi-user.target
+```
 
+11. Use the below command to create a Nautobot worker service file
+     1.     sudo nano /etc/systemd/system/nautobot-worker.service
+          1. Add the below code to the file. This code can be found in the official Nautobot documentation
+```
+[Unit]
+Description=Nautobot Celery Worker
+Documentation=https://docs.nautobot.com/projects/core/en/stable/
+After=network-online.target
+Wants=network-online.target
+ 
+[Service]
+Type=exec
+Environment="NAUTOBOT_ROOT=/opt/nautobot"
+ 
+User=nautobot
+Group=nautobot
+PIDFile=/var/tmp/nautobot-worker.pid
+WorkingDirectory=/opt/nautobot
+ 
+ExecStart=/opt/nautobot/bin/nautobot-server celery worker --loglevel INFO --pidfile /var/tmp/nautobot-worker.pid
+ 
+Restart=always
+RestartSec=30
+PrivateTmp=true
+ 
+[Install]
+WantedBy=multi-user.target
+```
+
+12. Use the below command to create a Nautobot scheduler service file
+     1.     sudo nano /etc/systemd/system/nautobot-worker.service
+          1. Add the below code to the file. This code can be found in the official Nautobot documentation
+```
+[Unit]
+Description=Nautobot Celery Beat Scheduler
+Documentation=https://docs.nautobot.com/projects/core/en/stable/
+After=network-online.target
+Wants=network-online.target
+ 
+[Service]
+Type=exec
+Environment="NAUTOBOT_ROOT=/opt/nautobot"
+ 
+User=nautobot
+Group=nautobot
+PIDFile=/var/tmp/nautobot-scheduler.pid
+WorkingDirectory=/opt/nautobot
+ 
+ExecStart=/opt/nautobot/bin/nautobot-server celery beat --loglevel INFO --pidfile /var/tmp/nautobot-scheduler.pid
+ 
+Restart=always
+RestartSec=30
+PrivateTmp=true
+ 
+[Install]
+WantedBy=multi-user.target
+```
+13.	Reload the systemd daemon and start the Nautobot services and enable them to initiate at boot time with the following commands.
+    1.     sudo systemctl daemon-reload
+    2.     sudo systemctl enable --now nautobot nautobot-worker nautobot-scheduler
+    3.     sudo systemctl restart nautobot nautobot-worker nautobot-scheduler
+14.	The next steps will be to enable HTTPS access to Nautobot. To do this, you will obtain an ssl certificate with the below commands.
+    1.     sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        1.     -keyout /etc/ssl/private/nautobot.key \
+        2.     -out /etc/ssl/certs/nautobot.crt
+15.	Use the below command to install nginx.
+    1.     sudo apt install -y nginx
+16.	Once nginx is installed, enter the below into the terminal and paste the given configuration. This file can be found in the official Nautobot documentation.
+    1.     sudo nano /etc/nginx/sites-available/nautobot.conf
+```
+server {
+    listen 443 ssl http2 default_server;
+    listen [::]:443 ssl http2 default_server;
+ 
+    server_name _;
+ 
+    ssl_certificate /etc/ssl/certs/nautobot.crt;
+    ssl_certificate_key /etc/ssl/private/nautobot.key;
+ 
+    client_max_body_size 25m;
+ 
+    location /static/ {
+        alias /opt/nautobot/static/;
+    }
+ 
+    # For subdirectory hosting, you'll want to toggle this (e.g. `/nautobot/`).
+    # Don't forget to set `FORCE_SCRIPT_NAME` in your `nautobot_config.py` to match.
+    # location /nautobot/ {
+    location / {
+        include uwsgi_params;
+        uwsgi_pass  127.0.0.1:8001;
+        uwsgi_param Host $host;
+        uwsgi_param X-Real-IP $remote_addr;
+        uwsgi_param X-Forwarded-For $proxy_add_x_forwarded_for;
+        uwsgi_param X-Forwarded-Proto $http_x_forwarded_proto;
+ 
+        # If you want subdirectory hosting, uncomment this. The path must match
+        # the path of this location block (e.g. `/nautobot`). For NGINX the path
+        # MUST NOT end with a trailing "/".
+        # uwsgi_param SCRIPT_NAME /nautobot;
+    }
+ 
+}
+ 
+server {
+    # Redirect HTTP traffic to HTTPS
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    return 301 https://$host$request_uri;
+}
+```
+
+17.	 Enter the below commands to delete the default nginx file and set up a link with the configuration file you just made. Then, restart nginx.
+     1.     sudo rm -f /etc/nginx/sites-enabled/default 
+     2.     sudo ln -s /etc/nginx/sites-available/nautobot.conf /etc/nginx/sites-enabled/nautobot.conf
+     3.     sudo systemctl restart nginx
+18.	Switch to the nautobot user and set the $NAUTOBOT_ROOT permissions to 755 with the below commands.
+    1.     sudo -iu nautobot
+    2.     chmod 755 $NAUTOBOT_ROOT
+# Nautobot Device Onboarding
+In this section, we will be onbaording the Arista switches into our Nautobot service.
+## Steps
 
 
