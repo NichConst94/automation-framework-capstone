@@ -24,6 +24,6 @@ Nesting Lists
     1. make nests 4 spaces in
     2. Otherwise it wont be intented as such
         1. You can do 8 for another layer
-             1. and 12 for a third layer
+            1. and 12 for a third layer
                  1. and so on
 
