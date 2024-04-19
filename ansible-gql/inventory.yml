@@ -1,4 +1,4 @@
 plugin: networktocode.nautobot.gql_inventory
 api_endpoint: https://10.128.0.8
-token: 41ddbd050e13bd939fb266adcc5ecf20a24034fd
+token: fa07c8e5a213a27cba2de974319e89ccb7886ccd
 validate_certs: false
