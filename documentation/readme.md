@@ -10,6 +10,11 @@ List:
 - Item 2
 - Item 3
 
+Code copy paste
+1. if you want to have a copyable section,
+2.     click tab after the number on the list. it will not indent, it will allow for copy paste.
+3. indents are created by placing spaces before the numbers, a tab after number will make it copy pasteable
+
 Ordered List
 1. Item 1
 2. Item 2
