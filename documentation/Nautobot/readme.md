@@ -1,4 +1,8 @@
+## Prerequisites
+- Container Labs Instance Created
+- Route to Container Labs Arista Switches Created
 # Google Cloud Instance Creation
+## Steps
 1. In your project environment, go to Compute Engine > VM Instances > Create Instance.
 2. Use the following choices for your VM instance.
     1. Name and Region
@@ -23,10 +27,7 @@
     6. Create
  
 6.	Once the instance is created, go to VM Instances, select the SSH button on the created Nautobot server to confirm connectivity.
- 
- 
 7.	Run the command “sudo apt update && sudo apt upgrade -y”
- 
 8.	Ping the address of one of the switches in the container lab environment. If this fails, ensure container lab is running, and the route to the container switches has been created. Once this succeeds, your instance creation has been completed. 
 
 
