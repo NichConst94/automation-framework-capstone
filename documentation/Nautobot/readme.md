@@ -13,11 +13,11 @@ Ordered List
 3. Item 3
 
 Nesting Lists
-- Item 1
-  - Item 1.1
-  - Item 1.2
-  - Item 1.3
-1. Item 2
-   a. sup
-   b. Yo
+- Unordered Item 1
+    - Item 1.1
+    - Item 1.2
+    - Item 1.3
+1. Ordered Item 1
+    1. make nests 4 spaces in
+    2. Otherwise it wont be intented as such
 
