@@ -325,7 +325,41 @@ server {
     1.     sudo -iu nautobot
     2.     chmod 755 $NAUTOBOT_ROOT
 # Nautobot Device Onboarding
-In this section, we will be onbaording the Arista switches into our Nautobot service.
+In this section, we will be onbaording the Arista switches into our Nautobot service. For any of our Nautobot features, ansible playbooks, and telemetry related services to work, Nautobot must have devices onboarded into its system.
 ## Steps
+First, to help organize our devices into a proper hierarchy, we need to create a system of organization for our devices. This includes location types, locations, and tags
+1.	Go to Organization > Location Types > Add.
+    1. Name: Container Lab
+    2. Content Types: dcim | device
+2.	 Next, go to Organization > Locations > Add to add 3 Site locations numbered 1-3, one for each switch
+    1. For each site:
+        1. Location Type: Container Lab
+        2. Name: Capstone Site #
+             1. Site number based on switches. 1,2, and 3 for S1 S2 and S3
+        3. Status: Active
+3. Many devices can be onboarded with little no setup, Arista devices require you to add a platform by going to Devices > Platform > Add.
+    1. Name: AristaEOS
+    2. Network driver: arista_eos
+    3. NAPALM driver: eos
+4. Prepare to Onboard an Arista container device.
+    1. Go to Jobs > Jobs and click the edit button on the disabled “perform device onboarding” job.
+    2. Set the job to enabled.
+    3. Click update.
+5. Onboard Arista container device.
+    1. Click the run job button in the jobs menu.
+    2. Use the following data for the job.
+        1. Location: Capstone Site #
+            1. 1 for switch 1, 2 for switch 2, etc
+        2. IP address: address of device being onboarded
+            1. 172.100.100.1 for this example
+        3. Port: 443
+        4. Platform: AristaEOS
+    3. Click “Run Job Now”, the job should complete with the final result of the device being onboarded.
+6.	Go to Devices > Devices to confirm the onboarding of the device, proceed to onboard the rest of the devices.
+# Nautobot Golden Configuration
+With the golden configuration and nornir plugins, you can generate configurations, backup configurations, and examine configuration compliance.
+## GitHub Setup
+## GitHub Setup
+## GitHub Setup
 
 
