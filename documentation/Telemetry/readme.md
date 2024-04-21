@@ -270,7 +270,7 @@ WantedBy=timers.target
     3.     sudo GOOS=linux GOARCH=amd64 go build -buildvcs=false
 3. Create a yaml file in that directory called ocprometheus.yml, we will be sending this to the switches.
     1.     sudo nano ocprometheus.yml
-    2. Enter the below code to the yaml file. This is based on the 
+    2. Enter the below code to the yaml file. These are based on the typical .yml files that ocprometheus uses.
 ```
 # Subscription paths.
 subscriptions:
@@ -278,8 +278,6 @@ subscriptions:
         - /Sysdb/interface/status/eth/phy/slice/1/intfStatus/
         - /Smash/routing/bgp
 # Prometheus metrics configuration.
-# If you use named capture groups in the path, they will be extracted into labels with the same name.
-# All fields are mandatory.
 
 metrics:
         - name: cpuinfo
