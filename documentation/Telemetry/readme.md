@@ -41,7 +41,46 @@
             1. TCP
                 1. Ports: 9090, 3000
 # Prometheus Installation
+1. Enter the below commands to install Prometheus in the /home directory.
+    1.     cd /home
+    2.     sudo wget https://github.com/prometheus/prometheus/releases/download/v2.50.1/prometheus-2.50.1.linux-amd64.tar.gz
+    3.     sudo tar xvfs prometheus-2.50.1.linux-amd64.tar.gz
+2. Enter the created Prometheus directory, check the contents, and open the Prometheus configuration file with the below commands.
+    1. cd prometheus-2.50.1.linux-amd64
+    2. ls
+    3. sudo nano prometheus.yml
 
+```
+# my global config
+global:
+  scrape_interval: 10s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'
+    file_sd_configs:
+    - files:
+      - '/home/NautoPromo/NautobotTargets.yml'
+```
 
 
 
