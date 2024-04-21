@@ -808,3 +808,86 @@ Site 3
     1. Go to Jobs > Generate Intended Configurations > Run 
         1. Run the job with no filters
 26.	Go to the GitHub Repository, a configuration for the switches should have been created
+
+# Compliance
+One of the most useful tools available in the golden configuration plugin, is the configuration compliance feature. This feature allows you to define compliance rules, and make a report of how many of your devices are compliant to those rules.
+1. Go to Golden Configuration > Compliance Features > Add and add each feature described below
+    1. 2024 Capstone AAA 
+        1. Name: 2024 Capstone AAA
+        2. Description: aaa must be default local
+    2. Ocprometheus acl
+        1. Name: Ocprometheus acl
+        2. Description: Acl needed for ocprometheus
+    3. Ocprometheus ocprometheus
+        1. Name: Ocprometheus ocprometheus
+        2. Description: ocprometheus daemon
+    4. Ocprometheus system control plane
+        1. Name: Ocprometheus system control plane
+        2. Description: control plane allow acl in
+    5. Ocprometheus terminattr
+        1. Name: Ocprometheus terminattr
+        2. Description: terminattr daemon
+2. Now that compliance features have been created, let us assign rules to them. Most will be related to Ocprometheus. Go to Golden Configuration > Compliance Rules > Add
+3. Add this ACL Rule
+    1. Platform: AristaEOS
+    2. Feature: ocprometheus_acl
+    3. Config Type: CLI
+    4. Config to match:
+```
+ip access-list capstone
+permit ip any any
+permit tcp any any
+permit tcp any any eq 8080
+permit tcp any any eq 6042
+```
+
+4. Add this AAA Rule
+    1. Platform: AristaEOS
+    2. Feature: 2024_capstone_aaa
+    3. Config Type: CLI
+    4. Config to match:
+```
+aaa authorization exec default local
+```
+
+5. Add this daemon Rule
+    1. Platform: AristaEOS
+    2. Feature: ocprometheus_ocprometheus
+    3. Config Type: CLI
+    4. Config to match:
+```
+daemon ocprometheus
+exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
+no shutdown
+```
+
+6. Add this control plane Rule
+    1. Platform: AristaEOS
+    2. Feature: ocprometheus_system_control_plane
+    3. Config Type: CLI
+    4. Config to match:
+```
+system control-plane
+ip access-group capstone in
+ip access-group capstone vrf MGMT in
+```
+
+7. Add this daemon Rule
+    1. Platform: AristaEOS
+    2. Feature: ocprometheus_terminattr
+    3. Config Type: CLI
+    4. Config to match:
+```
+daemon TerminAttr
+exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+no shutdown
+```
+8. Run these jobs in order
+    1. Backup Configurations
+    2. Generate Intended Configurations
+    3. Perform Configuration Compliance
+9. Go to Golden Config > Compliance Report
+    1. This is where you can observe a graphed visual of compliance. In this instance the ocprometheus related configuration has been removed from the devices to show noncompliance
+10.	Go to Golden Config > Config Compliance
+    1. This is where you can see a different visual of the device compliance, you can also click on a device and examine into further depth the reasons behind noncompliance
+
