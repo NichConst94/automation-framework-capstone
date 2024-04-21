@@ -1,7 +1,8 @@
 ## Prerequisites
 - Nautobot Setup and Onboarding
-# Telemetry VM Creation
-## Steps
+# Installations and Initial Setup
+## Telemetry VM Creation
+### Steps
 1.	On google cloud, go to Compute Engine > VM instances > Create Instance.
 2. Use the following choices for your VM instance
     1. Name and Region 
@@ -40,9 +41,9 @@
         5. Protocols: Specified
             1. TCP
                 1. Ports: 9090, 3000
-# Prometheus Installation
+## Prometheus Installation
 
-## Steps
+### Steps
 1. Enter the below commands to install Prometheus in the /home directory.
     1.     cd /home
     2.     sudo wget https://github.com/prometheus/prometheus/releases/download/v2.50.1/prometheus-2.50.1.linux-amd64.tar.gz
@@ -114,9 +115,9 @@ WantedBy=multi-user.target
     3.     sudo systemctl start prometheus
 6. Go to the public IP of your prometheus server on port 9090 to confirm its startup.
     1. Remember: No data will be transmitted to prometheus until we have obtained our targets with the next section, and installed ocprometheus on the target switches in another section.
-# Nautobot Integration with Prometheus Through Custom Service Script
+## Nautobot Integration with Prometheus Through Custom Service Script
 
-## Steps
+### Steps
 1. On the telemetry VM, install the dependencies for the service with the below commands.
     1.     sudo apt install python3-pip -y
     2.     sudo pip install pynautobot
@@ -241,6 +242,95 @@ WantedBy=timers.target
     2. You can see the next time this will run usin the below command
         1.     systemctl status NautoPromo.timer
 10.	As a reminder, Prometheus won’t be able to scrape its targets until the exporters are running on the target switches.
-# Grafana Installation
+## Grafana Installation
 
-## Steps
+### Steps
+1. On the telemetry VM, install Grafana with the below commands.
+    1.     sudo apt-get install -y apt-transport-https software-properties-common wget
+    2.     sudo mkdir -p /etc/apt/keyrings/
+    3.     wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+    4.     echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+    5.     sudo apt-get update
+    6.     sudo apt-get install grafana -y
+2. Start and enable the Grafana server on startup with the below commands.
+    1.     sudo systemctl daemon-reload
+    2.     sudo systemctl enable grafana-server.service
+    3.     sudo systemctl start grafana-server
+3. Check the status of the server with the below command
+    1.     sudo systemctl status grafana-server
+## Prometheus Exporter (ocprometheus) Setup
+
+### Steps
+1. Clone the ocprometheus repository in the /home directory using the commands.
+    1.     cd /home
+    2.     sudo git clone https://github.com/aristanetworks/goarista.git
+2. Enter the below commands to install GO and compile the ocprometheus code.
+    1.     cd /home/goarista/cmd/ocprometheus
+    2.     sudo snap install go --classic
+    3.     sudo GOOS=linux GOARCH=amd64 go build -buildvcs=false
+3. Create a yaml file in that directory called ocprometheus.yml, we will be sending this to the switches.
+    1.     sudo nano ocprometheus.yml
+    2. Enter the below code to the yaml file. This is based on the 
+```
+# Subscription paths.
+subscriptions:
+        - /Kernel/proc/cpu/utilization/
+        - /Sysdb/interface/status/eth/phy/slice/1/intfStatus/
+        - /Smash/routing/bgp
+# Prometheus metrics configuration.
+# If you use named capture groups in the path, they will be extracted into labels with the same name.
+# All fields are mandatory.
+
+metrics:
+        - name: cpuinfo
+          path: /Kernel/proc/cpu/utilization/total/(?P<usageType>(?:system|user|idle))
+          help: CPU Info
+        - name: basestatus
+          path: /Sysdb/interface/status/eth/phy/slice/1/intfStatus/(?P<intf>.+)/linkStatus
+          help: BaseStatus
+          valuelabel: linkStatus
+          defaultvalue: 0
+        - name: bgppeerstatus
+          path: /Smash/routing/bgp/bgpPeerInfoStatus/default/bgpPeerStatusEntry/(?P<peerAddress>.+)/bgpState
+          help: BGP Peer status
+          valuelabel: bgpState
+          defaultvalue: 0
+```
+
+You can follow the steps below to set up ocprometheus manually on the switches, or you could copy those files over to our desktop VM and use the ocprometheus ansible playbook to set it up on the switches.
+
+4. Copy the files to the switches with the below commands. Enter them one at a time so that you can enter in a password when prompted.
+    1.     sudo scp /home/goarista/cmd/ocprometheus/ocprometheus.yml admin@172.100.100.101://mnt/flash
+    2.     sudo scp /home/goarista/cmd/ocprometheus/ocprometheus admin@172.100.100.101://mnt/flash
+    3.     sudo scp /home/goarista/cmd/ocprometheus/ocprometheus.yml admin@172.100.100.102://mnt/flash
+    4.     sudo scp /home/goarista/cmd/ocprometheus/ocprometheus admin@172.100.100.102://mnt/flash
+    5.     sudo scp /home/goarista/cmd/ocprometheus/ocprometheus.yml admin@172.100.100.103://mnt/flash
+    6.     sudo scp /home/goarista/cmd/ocprometheus/ocprometheus admin@172.100.100.103://mnt/flash
+5. SSH into each switch and add the following additional configuration.
+    1. Take a few seconds before entering the “no shutdown” command for the ocprometheus daemon. This gives the TerminAttr daemon time to start up and use port 6042 before ocprometheus can get info from that port.
+```
+conf t
+ip access-list capstone
+permit ip any any
+permit tcp any any
+permit tcp any any eq 8080
+permit tcp any any eq 6042
+!
+exit
+conf t
+system control-plane
+ip access-group capstone in
+ip access-group capstone vrf MGMT in
+daemon TerminAttr
+  exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+no shutdown
+!
+daemon ocprometheus
+  exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
+no shutdown
+```
+
+6. Go to the public IP address of the telemetry server on port 9090 where Prometheus can be viewed to confirm data is being received.
+    1. Go to Status > Targets to confirm reachability to all devices.
+
+
