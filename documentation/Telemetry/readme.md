@@ -41,6 +41,8 @@
             1. TCP
                 1. Ports: 9090, 3000
 # Prometheus Installation
+
+## Steps
 1. Enter the below commands to install Prometheus in the /home directory.
     1.     cd /home
     2.     sudo wget https://github.com/prometheus/prometheus/releases/download/v2.50.1/prometheus-2.50.1.linux-amd64.tar.gz
@@ -114,3 +116,131 @@ WantedBy=multi-user.target
     1. Remember: No data will be transmitted to prometheus until we have obtained our targets with the next section, and installed ocprometheus on the target switches in another section.
 # Nautobot Integration with Prometheus Through Custom Service Script
 
+## Steps
+1. On the telemetry VM, install the dependencies for the service with the below commands.
+    1.     sudo apt install python3-pip -y
+    2.     sudo pip install pynautobot
+2. Exit to the home directory, and create the directory and file specified in the prometheus.yml file. This file will be managed by a custom service we will create to grab device targets from our nautobot server.
+    1.     cd ..
+    2.     sudo mkdir NautoPromo
+    3.     cd NautoPromo
+    4.     sudo nano NautobotTargets.yml
+3. Enter an example target to the file such as “- targets [172.100.100.101:8080]”. This will be changed by the service later, but this is to show the formatting file_sd_configs uses.
+4. Make a python file called NautoPromo.py under /home/NautoPromo using “sudo nano NautoPromo.py”and copy the below script to it.
+    1. Use the IP address of Nautobot as the URL and get the API target key from Nautobot under Admin > API Tokens.
+    2. Essentially, what this script does is query nautobot for targets using GraphQL, and then writing them to the target file we created earlier.
+```
+#### Imports ####
+import pynautobot
+import json
+ 
+#### Query to Nautobot for list of Management0 addresses ####
+query = """
+query {
+  devices {
+    name
+    interfaces {
+      name
+      ip_addresses {
+        address
+      }
+    }
+  }
+}
+"""
+ 
+#### Nautobot API Connection stuff. verify=False for self signed certs ###
+nb = pynautobot.api(
+    url = "https://IP_ADDRESS",
+    token = "API_NAUTOBOT_TOKEN",
+    verify = False
+)
+print("Querying")
+#### GraphQL Query to Nautobot, turn to json ####
+gql = nb.graphql.query(query=query)
+gqljson = (json.dumps(gql.json, indent=2))
+data = json.loads(gqljson)
+#### Parsing through each line in json for management0 address ####
+ 
+## Create empty array to be filled with target addresses ##
+arrayOfTargets = []
+ 
+## iterate through the json data with the keys and values to obtain ip addresses
+for device in data['data']['devices']:
+  for interface in device['interfaces']:
+    if interface['name'] == 'Management0':
+      for ip_address in interface['ip_addresses']:
+         address = ip_address['address']
+         address = address[:address.find("/")]
+         arrayOfTargets.append(address+":8080")
+  
+#### Create a string that has the one line of yaml that the file_sd_config target file needs. basically, "- targets:" and then a string array of the targets+port ####
+prometheusTargets = "- targets: ["
+for target in arrayOfTargets:
+  prometheusTargets = prometheusTargets + "'" + target + "', "
+prometheusTargets = prometheusTargets[:-2]
+prometheusTargets = prometheusTargets + "]"
+print(f"Targets found:\n{prometheusTargets}")
+ 
+#### Read target file on machine, if it has not changed, do not write over it, if it has, write over it ####
+writeOver = False
+with open("/home/NautoPromo/NautobotTargets.yml", "r") as targetFile:
+  for line in targetFile:
+    if line != prometheusTargets:
+      writeOver = True
+if writeOver:
+  with open("/home/NautoPromo/NautobotTargets.yml", "w") as file:
+    file.write(prometheusTargets)
+else:
+  print("no differences found since last query, no changes made to target file")
+```
+
+5. Ensure you give the text files the permissions to be read, written, and executed such as with the below commands.
+    1.     sudo chmod 777 NautobotTargets.yml
+    2.     sudo chmod 777 NautoPromo.py
+6. Create a service file called NautoPromo.service with the below command
+    1.     sudo nano /etc/systemd/system/NautoPromo.service
+    2. Add the below text to the file. This establishes it as a service that executes the script when called.
+```
+[Unit]
+Description=Script that queries nautobot for Prometheus file_sd targets
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/NautoPromo/NautoPromo.py
+
+[Install]
+WantedBy=multi-user.target 
+```
+
+7. Now, make a service timer in the same location using the below command
+    1.     sudo nano /etc/systemd/system/NautoPromo.timer
+    2. Use the below text to establish a timer that will run the NautoPromo service every 5 minutes.
+```
+[Unit]
+Description=Run NautoPromo every 5 minutes
+
+[Timer]
+OnUnitActiveSec=5m
+Unit=NautoPromo.service
+
+[Install]
+WantedBy=timers.target
+```
+
+8. Run the below commands to allow the machine to see the changes in services and enable the timer to run on startup.
+    1.     sudo systemctl daemon-reload
+    2.     sudo systemctl enable NautoPromo.timer
+    3.     sudo systemctl start NautoPromo.timer
+    4.     sudo systemctl enable NautoPromo
+    5.     sudo systemctl start NautoPromo
+9. Check the NautobotTargets.yml file and view the changes.
+    1. You can also view the logs of the script running with the below command
+        1.     journalctl -u NautoPromo 
+    2. You can see the next time this will run usin the below command
+        1.     systemctl status NautoPromo.timer
+10.	As a reminder, Prometheus won’t be able to scrape its targets until the exporters are running on the target switches.
+# Grafana Installation
+
+## Steps
