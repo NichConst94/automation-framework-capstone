@@ -31,4 +31,11 @@ Nesting Lists
         1. You can do 8 for another layer
             1. and 12 for a third layer
                  1. and so on
+              
+```
+for large multi line snippits of code,
+put them in a box created by three backticks at the top,
+a new line
+and three more backticks
+```
 
