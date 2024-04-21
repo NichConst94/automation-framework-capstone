@@ -663,7 +663,8 @@ management api http-commands
 ```
 
 As you may have noticed, certain templates drew from something known as config context. In order for this data to be parsed in the templates and added to the configuration, we need to define these in nautobot and assign them to organizational features like locations and tags.
-13.	An organizational feature we will use to attach to config context are tags. 
+
+13. An organizational feature we will use to attach to config context are tags.
     1. Go to Organization > Tags > Add
         1. Name: Border
         2. Content Type: dcim | device
