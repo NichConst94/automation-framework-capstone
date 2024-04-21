@@ -333,4 +333,75 @@ no shutdown
 6. Go to the public IP address of the telemetry server on port 9090 where Prometheus can be viewed to confirm data is being received.
     1. Go to Status > Targets to confirm reachability to all devices.
 
+# Configuration
+## Ocprometheus Custom Configuration Guide
+1. For clarification, we have configured ocprometheus in the installation instructions to grab data for BGP peering statues, interface up/down states, and tracking current CPU. These configuration instructions are an introduction to metric and subscription paths to show you how to find and configure your own metrics to be sent to Prometheus.
+2. The ocprometheus.yml file is a collection of subscription paths and metric paths with regular expressions. To customize what metrics are sent to Prometheus, the following background knowledge is needed.
+    1. Layout of EOS_native paths.
+    2. What metric paths are.
+    3. How to use regular expressions to match data in metric paths.
+    4. What subscription paths are.
+3. Layout of EOS_native paths
+    1. There is a wellspring of data surrounding the current state of the switch stored at any given time on the switch. To find this information, one could: 
+        1. Use the metric explorer in Arista Cloud Vision to find metric paths of info you need.
+        2. Make curl requests to crawl through the directories. This is what we will be using in this example.
+    2. Curl requests
+        1. In order to see these paths and information, you should temporarily add a subscription path to / in your ocprometheus.yml file. This is the root subscription path and will allow you to make curl requests to look through all of the switch config and decide what you want to track.
+            1. Once you have finished adding metric and subscription paths, this should be removed.
+        2. Root subscription path looks like “- /” and is in the same indentation as the other subscription paths in the ocprometheus.yml file.
+        3. Once the root path has been added, restart the ocprometheus daemon by entering the below commands in the switch configuration terminal.
+            1.     daemon ocprometheus
+            2.     shutdown
+            3.     no shutdown
+        4. Once ocprometheus is restarted, enter the below commands in the switch configuration terminal to enter bash and make a curl request to see the root directory of eos native paths.
+            1.     bash
+            2.     curl localhost:6060/rest
+        5. Examine the paths you see. Generally, the most important ones are /Smash and /Sysdb. These directories can have a lot of information about routing protocols and interface statuses.
+            1. To dig further down the path, simply add the directory to your curl request. This method can be used to look through the paths and find the information you want to track.
+                1.     curl localhost:6060/rest/Smash
+4. Intro to metric paths
+    1. Where do they go?
+        1. Metric paths are written in the ocprometheus.yml file under the “metrics:” section.
+    2. Structure of a metric path
+        1. The structure of a metric path and how it can be used to grab data is very straightforward. A metric path is very similar to a file path, with keys from key value pairs making up what looks like a directory path, and that is essentially what they are.
+        2. Looking at the above curl image regarding /rest/Smash, it can be viewed that you are requesting the contents of “rest”, and from those contents you find a subdirectory called “Smash”. Looking at the result of the command you can see several more subdirectories, such as “arp”.
+        3. Once you go far enough into subdirectories, you can find key value pairs to strings and numerical values. A key in the below example is “name”, and its value is “arp”. What we have been looking at so far have just been getting further into the directory, but this is where we see a standalone key-value pair that won't take you to more subdirectories. This would be the end of a metric path. Which would look like “/Smash/arp/name” and return the value of “arp”.
+            1. This will not work by itself however in our setup, since “arp” is a string and not a numerical value. Prometheus needs to be sent numerical data with labels to function properly. We need to set a default value in the ocprmetheus.yml file for it to be recognized in the database as a numerical value that can be tracked. This can be done with the “defaultvalue” key to set a label.
+                1. In addition, we need to set a label for it to be filtered by, this is usually handled by regular expressions however, in this example we can also use the keys “valuelabel” to set a label in most cases.
+            1. This can be leveraged to count certain status messages if you add a count operation to grafana. The grafana query by itself will only chart the default value that it was set to.
+            2. A much more simplistic use of these paths would be to track a numerical value over time, such as CPU utilization.
+            3. The below is an example of a matric path used to get the system CPU usage from a processor on a switch.
+                1. /Kernel/proc/cpu/utilization/cpu/0/system
+    3. In order to track cpu of the types user, idle, and system without regular expressions, one would need three metric paths:
+        1. /Kernel/proc/cpu/utilization/cpu/0/system
+        2. /Kernel/proc/cpu/utilization/cpu/0/user
+        3. /Kernel/proc/cpu/utilization/cpu/0/idle
+    4. With regular expressions, this can be brought down to one path, showing the convenience of using them.
+        1. /Kernel/proc/cpu/utilization/cpu/0/(?P<usageType>(?:system|user|idle))
+5. Using regular expressions to help obtain metric data.
+    1. Once you have decided on information you would like to track, you can use regular expressions to format your metric paths, grab specific information, and label it for the database so you can filter by that label.
+    2. One example of a metric path with regular expressions is the below. This tracks the up/down status of all interfaces on a switch.
+        1. /Sysdb/interface/status/eth/phy/slice/1/intfStatus/(?P<intf>.+)/linkStatus
+        2. The (?P<intf>.+) is the regular expression.
+            1. <intf> is a label given to the directory it matches.
+            2. .+ is the terms on which it will match input. For this example, the period means match any one character and the plus means to match any of the preceding symbol after the preceding symbols placement. So, this will match any character because of the period.
+        3. This expression takes the place of a directory, and essentially says “match any directory that would be in this spot in the path”. In this instance, it is taking the place of interface names.
+        4. What this essentially means, is that instead of specifying 4 specific metric paths for each interface to get their status, you can use the expression to make it match any interface, so you only have to write one metric path and it will track your specified info from all of them
+            1. Thinking about our cpu with multiple types example from earlier, you could track each individual processor by replacing the /0/ with the regular expression “/(?P<cpuNum>)/”, and then replacing the end with the “(?P<usageType>(?:system|user|idle))” expression. This would let you sort by specific processor number, or just see each of those 3 metrics from each of the many processors.
+        5. It then basically creates a label called intf that you can use to sort through information by interface in prometheus/Grafana.
+    3. Using metric paths can also let you filter information.
+        1. Look at the below metric path.
+        2. /Kernel/proc/cpu/utilization/total/(?P<usageType>(?:system|user|idle))
+            1. The regular expression is (?P<usageType>(?:system|user|idle)) and is similar to having two queries to label and filter info.
+                1. (P?<usageType> as we know from the previous example will label that part of the path, in this case it is labeling the type of cpu usage, so system, user, and idle will be labeled as a usageType
+                2. Notice that (?:system|user|idle) is the specification on what needs to be matched instead of “.+”. What this section does is filter the output by saying “only match keys called system, user, or idle, so that you can track each of their values”. This will make it track several key value pairs in one directory.
+6. How to use subscription paths
+    1. Subscription paths tell the switch what directory to subscribe to to get its information from. A subscription to a directory is a subscription to all of the data within that directory. This is the reason that “/” gives us all information under root, and “/Smash/” gives us all information under Smash, but not under Sysdb. Subscription paths should not be much shorter than required.
+    2. Subscription paths are essentially smaller metric paths.
+        1. If you have a metric path of “/Kernel/proc/cpu/utilization/total/(?P<usageType>(?:system|user|idle)) ” then a subscription path of “/Kernel/proc/cpu/utilization/” would suffice.
+        2. These subscription paths occur above the metric paths under “subscriptions:”.
+
+
+
+
 
