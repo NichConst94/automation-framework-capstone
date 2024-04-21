@@ -359,7 +359,451 @@ First, to help organize our devices into a proper hierarchy, we need to create a
 # Nautobot Golden Configuration
 With the golden configuration and nornir plugins, you can generate configurations, backup configurations, and examine configuration compliance.
 ## GitHub Setup
-## GitHub Setup
-## GitHub Setup
+1. In order for many of the golden configuration plugin features to work, you need to give nautobot access to a GitHub repository. These next steps will give you a token key you can give to nautobot.
+    1. Make a GitHub repository created for backups and generated configurations. In this instance we will be getting an API token for Nautobot that allows it to access the repo. We will be using a classic key with all permissions for simplicity, but you can likely make a less permission heavy token.
+    2. Click your profile and choose Settings > Developer settings > Personal access tokens > Tokens (classic) > Generate new token (classic).
+    3. Give the token a note of its name and set the duration for however long you need. Then, assign it the necessary permissions and click Generate Token. Once the token is generated, copy it into a text file for now, we will need it for the next step.
+        1. In this instance we gave the token full permissions.
+        2. If the token expires, simply make a new one and replace the one in the file we specify later.
+2. As the nautobot user, create a file that can store the token. In this instance, the command “nano gittoken.txt” is being used to create a file called gittoken, then the token is pasted in and saved. This file was created in /opt/nautobot/. Remember the absolute path that this file was created in.
+3. On the nautobot server, go to Secrets > Secrets < Add.
+    1. Give the secret a name.
+    2. Provider: Text File
+    3. Form: Path of the text file: "/opt/nautobot/gittoken.txt"
+4. Now, go to Secrets > Secret Groups > Add.
+    1. Assign the group a name.
+    2. Access Type: HTTP(s)
+    3. Secret Type: Token
+    4. Secret: Token Secret created last step
+5. Now that the access secret has been created, go to Extensibility > Git Repositories > Add.
+    1. Give the repository a name, in this case it will be Test Repo
+    2. Remote URL: URL of the GitHub repository you have edit access to that you wish for nautobot to send and receive config data.
+    3. Secrets group: the group created last step.
+    4. Ctl+Click backup configs, intended configs, and jinja templates.
+        1. These could also be stored in 3 separate repositories, but for such a small example environment these will be kept together.
+    5. Create and Sync.
+6. Next, we will be going over a few steps to finalize the needed aspects of the golden configuration plugin. First, go to Jobs > Jobs and enable all golden configuration jobs the same way the onboarding job was enabled.
+7. Go to Extensibility > GraphQL Queries > Add.
+    1. Call this query SoTAgg (Source of truth aggregate).
+        1. This query will be used in the generation of device configs. This query will grab information from the device data in nautobot, as well as a feature known as config contexts that we will discuss later
+    2. Paste the below text into the query. This may change depending on your individual information needs if your setup differs from ours, so check the Nautobot golden configuration installation guide for more information regarding this query as that is what this one is based on.
+```
+query ($device_id: ID!) {
+  device(id: $device_id) {
+    config_context
+    hostname: name
+    position
+    serial
+    primary_ip4 {
+      id
+      primary_ip4_for {
+        id
+        name
+      }
+    }
+    tags {
+      name
+    }
+    platform {
+      name
+      manufacturer {
+        name
+      }
+      napalm_driver
+    }
+    location {
+      name
+      vlans {
+        id
+        name
+        vid
+      }
+      vlan_groups {
+        id
+      }
+    }
+    interfaces {
+      description
+      mac_address
+      enabled
+      name
+      ip_addresses {
+        address
+        tags {
+          id
+        }
+      }
+      tags {
+        id
+      }
+    }
+  }
+}
+```
 
+8. Using Nautobot’s golden configuration plugin, you can specify a GitHub repository where folders and files will be created by the plugin for its purposes. 
+    1. Go to Golden Config > Golden Config Settings.
+    2. Click on the Default Settings link, then click edit.
+    3. Backup Repository: this is where backups of your device configs will be stored. The backup path we use will create a folder in your GitHub repository with the name of a location, and all of the devices in that location in nautobot will have their configs saved there. We use one location for all devices so there will only be one folder created.
+        1. Backup Repository: the repository we created.
+        2. Backup path: {{obj.location.name|slugify}}/{{obj.name}}.cfg.bak
+        3. Backup test: checked
+    4. Intended Configuration: Similar to the backup config in structure. This is where intended configs will be generated based on the templates and config context specified later.
+        1. Intended repo: created repo
+        2. Path: {{obj.location.name|slugify}}/{{obj.name}}.cfg
+    5. Templates Configuration: this is a bit different from the others. This is where jinja templates for each device OS should be found in the repository, and is used by nautobot to generate device configs. In this case, a jinja template for EOS configuration will be stored in no folder, but instead in the main section of the repository. We will make this template later
+        1. Jinja Repo: created repo
+        2. Path: {{obj.platform.network_driver}}.j2
+    6. Save
+9. To test connection with the GitHub repo, go to Jobs > Jobs and run the backup configuration job.
+    1. You could filter which devices will be backed up, but since we have 3, we will leave the default for no filters and all devices.
+    2. You should see informational messages about the job being completed and the devices being backed up.
+10. Go to the GitHub repository and confirm the files and folders have been created.
+## Automatic Backups
+1. Go to Jobs > Jobs > Run/Schedule Backup Configuration.
+2. Under Job Execution,
+    1. Type: Hourly (The VM instance hosting the switches is rarely on)
+    2. Name: Scheduled Backups
+    3. Start Date/Time: Whenever you wish to start.
+        1. You must click on the field, select a date on the calendar, and type the time at the bottom of the calendar.
+3. Under Jobs > Scheduled Jobs should be the created scheduled job.
+4. Wait until the time of the job passes and check the GitHub page where the backups were directed to be located and confirm they are there.
+    1. Backups will not be committed if no changes have been made to the config since last backup.
+## Generating Configs
+In order for configurations to be generated, we will create a jinja template in our GitHub repository that nautobot uses for generating device configurations. Then, we must create what are called config contexts, which are also added to that generated configuration depending on organizational features such as location and tags.
+1. In your GitHub repository, create a file called “arista_eos.j2” and enter the below code
+    1. This code will call upon other snippets of code that we will create. The reason for this organization is so you can find and modify sections of your template easier than looking through one large file.
+```
+{% include './eos/hostname.j2' %}
 
+spanning-tree mode mstp
+!
+{% include './eos/aaa.j2' %}
+!
+{% include './eos/local_user.j2' %}
+!
+{% include './eos/ocprometheus.j2' %}
+!
+{% include './eos/interfaces.j2' %}
+!
+{% if config_context["routes"] is defined %}
+{% if config_context["routes"]["static"] is defined %}
+{% for static in config_context["routes"]["static"] %}
+{{ static }}
+{% endfor %}
+{% endif %}
+{% endif %}
+!
+ip routing
+!
+{% if config_context["bgp"] is defined %}
+{% include './eos/bgp.j2' %}
+{% endif %}
+!
+{% include './eos/services.j2' %}
+!
+end 
+```
+
+2. Create a file “hostname.j2” under a directory called “eos”
+    1. Writing “eos/hostname.j2” as the filename will create the eos directory
+    2. Enter the below data
+```
+hostname {{ hostname.split('.')[0] }}
+```
+
+3. Create a file “_loopback.j2” under the eos directory and enter the below data
+```
+{% if interface["ip_addresses"] | length > 0 %}
+{% for addr in interface["ip_addresses"] %}
+{% if addr["address"] is defined %}
+   ip address {{ addr["address"] }}
+{% endif %}
+{% endfor %}
+{% else %}
+   no ip address
+{% endif %}
+{% if interface["enabled"] == false %}
+   no shutdown
+{% endif %}
+```
+
+4. Create a file “_mgmt.j2” under the eos directory and enter the below data
+```
+{% if interface["description"] | length > 1 %}
+   description {{ interface["description"] }}
+{% endif %}
+{% if interface["ip_addresses"] | length > 0 %}
+{% for addr in interface["ip_addresses"] %}
+{% if addr["address"] is defined %}
+   ip address {{ addr["address"] }}
+{% endif %}
+{% endfor %}
+{% else %}
+   no ip address
+{% endif %}
+{% if interface["enabled"] == false %}
+   shutdown
+{% endif %}
+```
+
+5. Create a file “_physical.j2” under the eos directory and enter the below data
+```
+{% if interface["ip_addresses"] | length > 0 %}
+   no switchport
+{% endif %}
+{% if interface["mac_address"] != none %}
+   mac-address {{ interface["mac_address"] }}
+{% endif %}
+{% if interface["ip_addresses"] | length > 0 %}
+{% for addr in interface["ip_addresses"] %}
+{% if addr["address"] is defined %}
+   ip address {{ addr["address"] }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if interface["enabled"] == false %}
+   shutdown
+{% endif %}
+```
+
+6. Create a file “_svi.j2” under the eos directory and enter the below data
+```
+{% if interface["ip_addresses"] | length > 0 %}
+{% for addr in interface["ip_addresses"] %}
+{% if addr["address"] is defined %}
+   ip address {{ addr["address"] }}
+{% endif %}
+{% endfor %}
+{% else %}
+   no ip address
+{% endif %}
+{% if interface["enabled"] == true %}
+   no shutdown
+{% endif %}
+```
+
+7. Create a file “aaa.j2” under the eos directory and enter the below data
+```
+aaa authorization exec default local
+!
+no aaa root
+!
+```
+
+8. Create a file “bgp.j2” under the eos directory and enter the below data
+```
+router bgp {{ config_context["bgp"]["asn"] }}
+   router-id {{ config_context["bgp"]["rid"] }}
+{% for neighbor in config_context["bgp"]["neighbors"] %}
+   neighbor {{ neighbor["ip"] }} remote-as {{ neighbor["remote-asn"] }}
+   neighbor {{ neighbor["ip"] }} description {{neighbor["description"]}}
+{% endfor %}
+{% for network in config_context["bgp"]["networks"] %}
+   network {{ network }}
+{% endfor %}
+```
+
+9.	Create a file “interfaces.j2” under the eos directory and enter the below data
+```
+{% for interface in interfaces %}
+interface {{ interface["name"] }}
+{% if interface["cpf_ntc_description"] is defined and interface["cpf_ntc_description"] != "" %}
+   description {{ interface["cpf_ntc_description"] }}
+{% elif interface["description"] | length > 1 %}
+   description {{ interface["description"] }}
+{% endif %}
+{% if 'lan' in interface["name"] %}
+{% include "./eos/_svi.j2" %}
+{% elif 'thernet' in interface["name"] %}
+{% include "./eos/_physical.j2" %}
+{% elif 'Loop' in interface["name"] %}
+{% include "./eos/_loopback.j2" %}
+{% elif 'anagement' in interface["name"] %}
+{% include "./eos/_mgmt.j2" %}
+{% endif %}
+{% endfor %}
+```
+
+10.	Create a file “local_user.j2” under the eos directory and enter the below data
+```
+username admin privilege 15 role network-admin secret sha512 $6$eucN5ngreuExDgwS$xnD7T8jO..GBDX0DUlp.hn.W7yW94xTjSanqgaQGBzPIhDAsyAl9N4oScHvOMvf07uVBFI4mKMxwdVEUVKgY/.
+```
+
+11.	Create a file “ocprometheus.j2” under the eos directory and enter the below data
+```
+{% if config_context["ocprometheus"] is defined %}
+ip access-list capstone
+   10 permit ip any any
+   20 permit tcp any any
+   30 permit tcp any any eq 8080
+   40 permit tcp any any eq 6042
+!
+system control-plane
+   ip access-group capstone in
+   ip access-group capstone vrf MGMT in
+!
+daemon TerminAttr
+   exec /usr/bin/TerminAttr -disableaaa -grpcaddr MGMT/127.0.0.1:6042
+   no shutdown
+!
+daemon ocprometheus
+   exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
+   no shutdown
+{% endif %}
+```
+
+12.	Create a file “services.j2” under the eos directory and enter the below data
+```
+management api http-commands
+   no shutdown
+   vrf MGMT
+      no shutdown
+!
+```
+
+As you may have noticed, certain templates drew from something known as config context. In order for this data to be parsed in the templates and added to the configuration, we need to define these in nautobot and assign them to organizational features like locations and tags.
+13.	An organizational feature we will use to attach to config context are tags. 
+    1. Go to Organization > Tags > Add
+        1. Name: Border
+        2. Content Type: dcim | device
+14.	Assign the tag to each switch by going to Devices > Devices > Switch #
+    1. Click edit
+    2. Tag: Border
+16.	Now that organizational features have been implemented, we can easily assign config contexts to those locations and tags. Config contexts are used when generating device configuration and are applied depending on the organizational features specified.
+    1. Go to Extensibility > Config Contexts
+        1. Name: Site 1 BGP
+        2. Description: BGP for the border router of site 1
+        3. Tags: Border
+        4. Locations: Capstone Site 1
+        5. Data: Data is represented in JSON, use the below config for Site 1. This JSON data will allow the configuration jinja templates to grab data by using the keys and values
+```
+{
+    "bgp": {
+        "asn": "100",
+        "neighbors": [
+            {
+                "description": "description Peer with SWITCH2",
+                "ip": "192.168.10.2",
+                "password": "null",
+                "remote-asn": 200
+            },
+            {
+                "description": "description Peer with SWITCH3",
+                "ip": "192.168.11.2",
+                "password": "null",
+                "remote-asn": 300
+            }
+        ],
+        "networks": [
+            "192.168.1.0/24",
+            "192.168.2.0/24",
+            "192.168.3.0/24"
+        ],
+        "rid": "1.1.1.1"
+    }
+}
+```
+
+17.	Repeat step 16 for sites 2 and 3, except use the below data and rename appropriately. Use the border tag for both, use the appropriate locations for both sites (2 for 2, 2 for 3)
+Site 2
+```
+{
+    "bgp": {
+        "asn": "200",
+        "neighbors": [
+            {
+                "description": "description Peer with SWITCH1",
+                "ip": "192.168.10.1",
+                "password": "null",
+                "remote-asn": 100
+            },
+            {
+                "description": "description Peer with SWITCH3",
+                "ip": "192.168.12.2",
+                "password": "null",
+                "remote-asn": 300
+            }
+        ],
+        "networks": [
+            "192.168.4.0/24",
+            "192.168.5.0/24",
+            "192.168.6.0/24"
+        ],
+        "rid": "2.2.2.2"
+    }
+}
+```
+
+Site 3
+```
+{
+    "bgp": {
+        "asn": "300",
+        "neighbors": [
+            {
+                "description": "description Peer with SWITCH1",
+                "ip": "192.168.11.1",
+                "password": "null",
+                "remote-asn": 100
+            },
+            {
+                "description": "description Peer with SWITCH2",
+                "ip": "192.168.12.1",
+                "password": "null",
+                "remote-asn": 200
+            }
+        ],
+        "networks": [
+            "192.168.7.0/24",
+            "192.168.8.0/24",
+            "192.168.9.0/24"
+        ],
+        "rid": "3.3.3.3"
+    }
+}
+```
+
+18.	Make a config context for global default management route. No organizational features specified means it will apply to all devices
+    1. Name: Default Management Route
+    2. Locations: None
+    3. Tags: None 
+    4. Data:
+```
+{
+    "routes": {
+        "static": [
+            "ip route vrf MGMT 0.0.0.0/0 172.100.100.1"
+        ]
+    }
+}
+```
+
+19.	Make a config context for ocprometheus, assign the context to the Arista EOS platform so it will only apply to arista devices
+    1. Platform: Arista EOS
+    2. Data:
+```
+{
+    "ocprometheus": true
+}
+```
+
+20.	Another important thing to do in order to generate configurations properly is to add interfaces and IP addresses to our switches in nautobot, so that those interfaces can be shown in the generated config. Before this, we need to create IP addresses to use for those interfaces.
+    1. Go to IPAM > Prefixes > Add
+        1. Add the prefix 192.168.0.0/16 as a global prefix, this will encompass all of our addresses needed in our BGP configuration
+21.	Now that the prefix has been added, we can create IP addresses that fall under that global prefix.
+    1. Go to IPAM > IP Addresses > Add
+        1. Add every IP address used in the Ethernet and Loopback interfaces. 192.168.9.1/24 as an example
+            1. Address: IP Address
+            2. Namespace: Global
+            3. Status: Active
+23.	Now that we have the addresses for the interfaces, we will add those interfaces and IPs to our switches.
+    1. Edit each device and click Add Components > Interfaces
+        1. Name: Name each interface appropriately
+            1. Ex: Ethernet1, Loopback3, etc
+        2. Status : Active
+        3. IP Address: Select appropriate address from the ones created
+25.	Now that Our jinja templates have been made, our tags assigned, and our config contexts created, it is time to generate the device configs.
+    1. Go to Jobs > Generate Intended Configurations > Run 
+        1. Run the job with no filters
+26.	Go to the GitHub Repository, a configuration for the switches should have been created
