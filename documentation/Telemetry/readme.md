@@ -49,7 +49,14 @@
     1. cd prometheus-2.50.1.linux-amd64
     2. ls
     3. sudo nano prometheus.yml
-
+3. Modify the configuration file according to the below. This will make the Prometheus server grab information every 10 seconds, and direct the server to grab its targets from a file we specify. DO NOT USE TABS, use multiple spaces to align the text.
+    1. Scrape interval: 10s
+    2. Scrape_configs:
+        1. Replace “static_configs:” with file_sd_configs:
+        2. Below file_sd_configs:
+            1. – files:
+            2. – ‘/home/NautoPromo/NautobotTargets.yml’
+    3. It should end up looking like the below
 ```
 # my global config
 global:
@@ -82,6 +89,28 @@ scrape_configs:
       - '/home/NautoPromo/NautobotTargets.yml'
 ```
 
+4. We will be creating a service file so that we can enable the server to run on startup.
+    1. Create a service file with the below command
+        1.     sudo nano /etc/systemd/system/prometheus.service
+    2. Add the below text to the file. This establishes it as a service that executes Prometheus.
+```
+[Unit]
+Description=prometheus service file
+After=network.target
 
+[Service]
+Type=simple
+ExecStart=/home/prometheus-2.50.1.linux-amd64/prometheus --config.file=/home/prometheus-2.50.1.linux-amd64/prometheus.yml
 
+[Install]
+WantedBy=multi-user.target
+```
+
+5. Run the following commands to make the service file run on startup.
+    1.     sudo systemctl daemon-reload
+    2.     sudo systemctl enable prometheus
+    3.     sudo systemctl start prometheus
+6. Go to the public IP of your prometheus server on port 9090 to confirm its startup.
+    1. Remember: No data will be transmitted to prometheus until we have obtained our targets with the next section, and installed ocprometheus on the target switches in another section.
+# Nautobot Integration with Prometheus Through Custom Service Script
 
