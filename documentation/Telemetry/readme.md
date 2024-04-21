@@ -341,6 +341,7 @@ no shutdown
     2. What metric paths are.
     3. How to use regular expressions to match data in metric paths.
     4. What subscription paths are.
+### EOS Native Paths
 3. Layout of EOS_native paths
     1. There is a wellspring of data surrounding the current state of the switch stored at any given time on the switch. To find this information, one could: 
         1. Use the metric explorer in Arista Cloud Vision to find metric paths of info you need.
@@ -359,6 +360,7 @@ no shutdown
         5. Examine the paths you see. Generally, the most important ones are /Smash and /Sysdb. These directories can have a lot of information about routing protocols and interface statuses.
             1. To dig further down the path, simply add the directory to your curl request. This method can be used to look through the paths and find the information you want to track.
                 1.     curl localhost:6060/rest/Smash
+### Metric Paths
 4. Intro to metric paths
     1. Where do they go?
         1. Metric paths are written in the ocprometheus.yml file under the “metrics:” section.
@@ -378,6 +380,7 @@ no shutdown
         3. /Kernel/proc/cpu/utilization/cpu/0/idle
     4. With regular expressions, this can be brought down to one path, showing the convenience of using them.
         1. /Kernel/proc/cpu/utilization/cpu/0/(?P<usageType>(?:system|user|idle))
+### Regular Expressions
 5. Using regular expressions to help obtain metric data.
     1. Once you have decided on information you would like to track, you can use regular expressions to format your metric paths, grab specific information, and label it for the database so you can filter by that label.
     2. One example of a metric path with regular expressions is the below. This tracks the up/down status of all interfaces on a switch.
@@ -395,13 +398,57 @@ no shutdown
             1. The regular expression is (?P<usageType>(?:system|user|idle)) and is similar to having two queries to label and filter info.
                 1. (P?<usageType> as we know from the previous example will label that part of the path, in this case it is labeling the type of cpu usage, so system, user, and idle will be labeled as a usageType
                 2. Notice that (?:system|user|idle) is the specification on what needs to be matched instead of “.+”. What this section does is filter the output by saying “only match keys called system, user, or idle, so that you can track each of their values”. This will make it track several key value pairs in one directory.
+### Subscription Paths
 6. How to use subscription paths
     1. Subscription paths tell the switch what directory to subscribe to to get its information from. A subscription to a directory is a subscription to all of the data within that directory. This is the reason that “/” gives us all information under root, and “/Smash/” gives us all information under Smash, but not under Sysdb. Subscription paths should not be much shorter than required.
     2. Subscription paths are essentially smaller metric paths.
         1. If you have a metric path of “/Kernel/proc/cpu/utilization/total/(?P<usageType>(?:system|user|idle)) ” then a subscription path of “/Kernel/proc/cpu/utilization/” would suffice.
         2. These subscription paths occur above the metric paths under “subscriptions:”.
-
-
+## Grafana Dashboard Configuration
+1. Go to the public Ip of the telemetry server at port 3000
+    1. Remember to create a firewall rule for ports 9090 and 3000 in google cloud.
+    2. Enter admin admin for the credentials, it will ask you to make new credentials.
+        1. @Stout2024
+2. Go to Connections > Data Sources > Add New Data Source.
+    1. Select Prometheus as the data source.
+3. Modify the data source by setting the connection to localhost at the Prometheus port.
+    1. Click Save and Test, you should see a validation.
+    2. Click building a dashboard in the validation message.
+4. Click Add Visualization and select our Prometheus datasource.
+5. Go to Query > code.
+    1. Input the below for our first query.
+        1.     count by(linkStatus) (basestatus{linkStatus=~"linkUp|linkDown"})
+        2. Click the blue “run queries” button next to the code button.
+6. On the right side of the screen, switch the type of panel from “Time Series” to Stat.
+    1. Under Panel Options,
+        1. Change the panel title to “Interface Link States”.
+    2. Under Stat Styles,
+        1. Text mode: Value and name
+        2. Graph Mode: None
+7. Click Save at the top right of the screen.
+    1. When the Save Dashboard menu pops up call it something along the lines of Current States.
+    2. If it doesn’t exit out of the current scene click apply next to save.
+8. Click Add > Visualization.
+9. Do the same setup as the interface status panel except with the below query code and panel name.
+    1. Panel Name: BGP Peer Count
+    2. Code:
+        1.     count by(bgpState) (bgppeerstatus)
+        2. Click the blue “run queries” button next to the code button.
+10. Change the time duration to from now to now.
+11. Make a new dashboard by going to Dashboards > new > new dashboard.
+    1. Click Add visualization like the other dashboard and once again select Prometheus as the data source.
+12. Use the following to set up a systemCPU tracker.
+    1. Under Query > Code enter the below.
+        1.     cpuinfo{usageType="system"}
+        2. Click the blue “run queries” button next to the code button.
+    2. Panel option
+        1. Panel Title: SystemCPU
+    3. Save and name the dashboard CPU Tracker.
+    d. Click apply next to save.
+13.	Make another visualization panel in the dashboard like step 12, but change the word “system” in the code to “user”.
+    1. Title: UserCPU
+    2. Click the blue “run queries” button next to the code button before you save it.
+    3. Click apply next to save.
 
 
 
