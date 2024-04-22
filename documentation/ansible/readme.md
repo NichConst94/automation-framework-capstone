@@ -6,3 +6,4 @@ When adjusting device configurations on a Source of Truth (SoT) platform like Na
 
 ```bash
 sudo apt update && sudo apt full-upgrade -y
+sudo apt update && sudo apt full-upgrade -y
