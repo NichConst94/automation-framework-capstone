@@ -6,6 +6,7 @@ When adjusting device configurations on a Source of Truth (SoT) platform like Na
 
 ```bash
 sudo apt update && sudo apt full-upgrade -y
+``````
 
 2. Install Ansible using Ansible’s apt repository
 
@@ -13,6 +14,7 @@ sudo apt update && sudo apt full-upgrade -y
 sudo apt install software-properties-common
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt install ansible -y
+``````
 
 3. Install the required packages for Nautobot’s Ansible collection
 
