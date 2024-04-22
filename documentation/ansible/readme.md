@@ -56,7 +56,7 @@ ansible-galaxy collection install networktocode.nautobot
 14.	Open inventory.yml in a text editor such as nano or Visual Studio Code 
 15.	Enter the following configuration details for the dynamic inventory plugin into the file:
 
-```bash
+```yaml
 plugin: networktocode.nautobot.gql_inventory
 api_endpoint: https://<IP_of_nautobot>
 token: API token created from step 11
