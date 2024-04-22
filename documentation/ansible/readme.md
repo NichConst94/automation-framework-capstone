@@ -76,4 +76,6 @@ This is the minimum required configuration for the dynamic inventory plugin to w
 ```bash
 ansible-inventory -v --list -i inventory.yml
 ```
+# BGP
+# Prometheus
 
