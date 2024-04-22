@@ -20,38 +20,38 @@ sudo apt update && sudo apt full-upgrade -y
 sudo apt install software-properties-common
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt install ansible -y
-``````
+```
 
 3. Install the required packages for Nautobot’s Ansible collection
 
 ```bash
 sudo apt install python3-pip -y
 sudo pip install netutils
-``````
+```
 
 4.	Switch to the /etc/ansible directory
 
 ```bash
 cd /etc/ansible/
-``````
+```
 
 5.	Use the chmod command to change the file permissions of the ansible.cfg file to allow full access to the file by all users.
 
 ```bash
 sudo chmod 777 ansible.cfg
-``````
+```
 
 6.	Create a complete initial Ansible configuration using the ansible-config init command. This creates a complete configuration that includes all currently installed plugins.
 
 ```bash
 ansible-config init --disabled -t all > ansible.cfg
-``````
+```
 
 7.	Install the Nautobot Ansible collection using Ansible Galaxy
 
 ```bash
 ansible-galaxy collection install networktocode.nautobot
-``````
+```
 
 8.	Navigate to the internal IP address of the Nautobot instance and login using a web browser. 
 9.	In the Nautobot GUI, navigate to Admin > Profile > API Tokens
@@ -67,7 +67,7 @@ plugin: networktocode.nautobot.gql_inventory
 api_endpoint: https://<IP_of_nautobot>
 token: API token created from step 11
 validate_certs: false
-``````
+```
  
 This is the minimum required configuration for the dynamic inventory plugin to work. The validate_certs parameter, while optional, is required for our environment because of Nautobot’s use of self-signed SSL/TLS certificates. 
 
@@ -75,5 +75,5 @@ This is the minimum required configuration for the dynamic inventory plugin to w
 
 ```bash
 ansible-inventory -v --list -i inventory.yml
-``````
+```
 
