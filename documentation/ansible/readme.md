@@ -1,4 +1,6 @@
 # Ansible
+Ansible is an open-source IT automation tool that helps automate common IT tasks. 
+
 Prerequisites:
 - Linux desktop instance created in Google Cloud
 - Remote Desktop Protocol (RDP) client installed on the host computer
