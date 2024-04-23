@@ -59,12 +59,20 @@ pipeline {
         
         stage('Git Push') {
             steps {
-                echo 'Trying push to GitHub...'
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    withCredentials([gitUsernamePassword(credentialsId: 'jenkins-github-token', gitToolName: 'Default')]) {
-                        sh 'git add .'
-                        sh 'git commit -m "Push from Jenkins Python Pipeline"'
-                        sh 'git push -u origin main'
+                script {
+                    def commitMsg = sh(script: 'git log -1 --format=%b', returnStdout: true).trim()
+                    
+                    if (commitMsg != "Push from Jenkins Python Pipeline") {
+                        echo 'Trying push to GitHub...'
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            withCredentials([gitUsernamePassword(credentialsId: 'jenkins-github-token', gitToolName: 'Default')]) {
+                                sh 'git add .'
+                                sh 'git commit -m "Push from Jenkins Python Pipeline"'
+                                sh 'git push -u origin main'
+                            }
+                        }
+                    } else {
+                        echo 'Skipping Git Push as this was triggered by Jenkins push'
                     }
                 }
             }
