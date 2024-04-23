@@ -105,7 +105,7 @@ ansible-playbook init-prometheus.yml
 
 9. Here is the SWITCH1 excerpt from the playbook:
 ```yaml
-    - name: Configure Prometheus on SWITCH1 
+- name: Configure Prometheus on SWITCH1 
 
   hosts: SWITCH1 
 
