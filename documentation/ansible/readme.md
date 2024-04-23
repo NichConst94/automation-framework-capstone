@@ -98,9 +98,9 @@ In this section, we will walk through how to set up OCPrometheus using an Ansibl
 6. Copy the previous plays in the playbook twice, once for SWITCH2 and once for SWITCH3. Ensure to alter the names and hosts areas to reflect each switch name.
 
 7. Run the playbook with the command:
-   ```bash
-   ansible-playbook init-prometheus.yml
-   ```
+```bash
+ansible-playbook init-prometheus.yml
+```
 8. Go to the public IP of the Prometheus server and go to Status > Targets. Verify that the state is set to “UP” for the devices.
 
 9. Here is the SWITCH1 excerpt from the playbook:
