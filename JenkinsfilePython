@@ -61,8 +61,6 @@ pipeline {
             steps {
                 script {
                     def commitMsg = sh(script: 'git log -1 --format=%B', returnStdout: true).trim()
-                    echo "Commit Message: ${commitMsg}"
-            
                     if (commitMsg != "Push from Jenkins Python Pipeline") {
                         echo 'Trying push to GitHub...'
                         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
