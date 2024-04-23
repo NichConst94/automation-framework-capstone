@@ -10,7 +10,7 @@ import requests
 import os
 import json
 
-class ProvisionCVE(Job):
+class ProvisionCVE(Job): 
     class Meta:
         name = "Provision CVEs"
         description = "Pull CVEs from the internet and propogate them into Nautobot."
