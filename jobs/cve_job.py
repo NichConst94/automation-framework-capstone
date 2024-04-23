@@ -9,7 +9,7 @@ import time
 import requests
 import os
 import json
- 
+
 class ProvisionCVE(Job): 
     class Meta:
         name = "Provision CVEs"
