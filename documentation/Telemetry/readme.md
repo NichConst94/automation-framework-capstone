@@ -130,7 +130,7 @@ WantedBy=multi-user.target
 4. Make a python file called NautoPromo.py under /home/NautoPromo using “sudo nano NautoPromo.py”and copy the below script to it.
     1. Use the IP address of Nautobot as the URL and get the API target key from Nautobot under Admin > API Tokens.
     2. Essentially, what this script does is query nautobot for targets using GraphQL, and then writing them to the target file we created earlier.
-```
+```python
 #### Imports ####
 import pynautobot
 import json
