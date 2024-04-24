@@ -42,25 +42,25 @@
     - name: Establish BGP Peers on SWITCH1
       arista.eos.eos_bgp_global:
         config:
-          as_number: '100'
+          as_number: 100
           router_id: 1.1.1.1
           neighbors:
             - neighbor_address: 192.168.10.2
               remote_as: 200
               description: Peer with SWITCH2
               encryption_password:
-                password: '@Stout2024'
+                password: "@Stout2024"
                 type: 0
             - neighbor_address: 192.168.11.2
               remote_as: 300
               description: Peer with SWITCH3
               encryption_password:
-                password: '@Stout2024'
+                password: "@Stout2024"
                 type: 0
     - name: Advertise Networks on SWITCH1
       arista.eos.eos_bgp_global:
         config:
-          as_number: '100'
+          as_number: 100
           networks:
             - address: 192.168.1.0/24
             - address: 192.168.2.0/24
@@ -114,25 +114,25 @@
     - name: Establish BGP Peers on SWITCH2
       arista.eos.eos_bgp_global:
         config:
-          as_number: '200'
+          as_number: 200
           router_id: 2.2.2.2
           neighbors:
             - neighbor_address: 192.168.10.1
               remote_as: 100
               description: Peer with SWITCH1
               encryption_password:
-                password: '@Stout2024'
+                password: "@Stout2024"
                 type: 0
             - neighbor_address: 192.168.12.2
               remote_as: 300
               description: Peer with SWITCH3
               encryption_password:
-                password: '@Stout2024'
+                password: "@Stout2024"
                 type: 0
     - name: Advertise Networks on SWITCH2
       arista.eos.eos_bgp_global:
         config:
-          as_number: '200'
+          as_number: 200
           networks:
             - address: 192.168.4.0/24
             - address: 192.168.5.0/24
@@ -186,25 +186,25 @@
     - name: Establish BGP Peers on SWITCH3
       arista.eos.eos_bgp_global:
         config:
-          as_number: '300'
+          as_number: 300
           router_id: 3.3.3.3
           neighbors:
             - neighbor_address: 192.168.11.1
               remote_as: 100
               description: Peer with SWITCH1
               encryption_password:
-                password: '@Stout2024'
+                password: "@Stout2024"
                 type: 0
             - neighbor_address: 192.168.12.1
               remote_as: 200
               description: Peer with SWITCH2
               encryption_password:
-                password: '@Stout2024'
+                password: "@Stout2024"
                 type: 0
     - name: Advertise Networks on SWITCH3
       arista.eos.eos_bgp_global:
         config:
-          as_number: '300'
+          as_number: 300
           networks:
             - address: 192.168.7.0/24
             - address: 192.168.8.0/24
