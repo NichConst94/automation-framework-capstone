@@ -11,12 +11,12 @@ When adjusting device configurations on a Source of Truth (SoT) platform like Na
 ### Steps
 When adjusting device configurations on a Source of Truth (SoT) platform like Nautobot, managing hundreds or even thousands of devices can quickly become overwhelming. As a result, a static host file is not a practical or scalable solution for integrating a network automation framework, as it must be stored on the control node. Fortunately, Nautobot provides a dynamic inventory plugin that uses GraphQL to query our Nautobot instance for the desired host. This plugin can be found on Ansible Galaxy, a free platform that allows users to discover, download, and share community-generated roles and collections. This simplifies the process of incorporating a dynamic inventory into both your network automation framework and any other playbooks you may require. 
 
-1. On the Linux desktop instance in Google Cloud, open the Terminal and run a system update using apt
+1. On the Linux desktop instance in Google Cloud, open the Terminal and run a system update using `apt`
 ```bash
 sudo apt update && sudo apt full-upgrade -y
 ```
 
-2. Install Ansible using Ansible’s apt repository
+2. Install Ansible using Ansible’s `apt` repository
 ```bash
 sudo apt install software-properties-common
 sudo add-apt-repository --yes --update ppa:ansible/ansible
@@ -29,17 +29,17 @@ sudo apt install python3-pip -y
 sudo pip install netutils
 ```
 
-4.	Switch to the /etc/ansible directory
+4.	Switch to the `/etc/ansible directory`
 ```bash
 cd /etc/ansible/
 ```
 
-5.	Use the chmod command to change the file permissions of the ansible.cfg file to allow full access to the file by all users.
+5.	Use the chmod command to change the file permissions of the `ansible.cfg` file to allow full access to the file by all users.
 ```bash
 sudo chmod 777 ansible.cfg
 ```
 
-6.	Create a complete initial Ansible configuration using the ansible-config init command. This creates a complete configuration that includes all currently installed plugins.
+6.	Create a complete initial Ansible configuration using the `ansible-config init` command. This creates a complete configuration that includes all currently installed plugins.
 ```bash
 ansible-config init --disabled -t all > ansible.cfg
 ```
@@ -67,7 +67,7 @@ validate_certs: false
 
 This is the minimum required configuration for the dynamic inventory plugin to work. The validate_certs parameter, while optional, is required for our environment because of Nautobot’s use of self-signed SSL/TLS certificates. 
 
-16.	In the Terminal, use the ansible-inventory command to test the inventory plugin. Ansible will query the Nautobot SoT using the GraphQL dynamic inventory plugin to display information for each device onboarded in Nautobot.
+16.	In the Terminal, use the `ansible-inventory` command to test the inventory plugin. Ansible will query Nautobot using the GraphQL dynamic inventory plugin to display information for each onboarded device.
 ```bash
 ansible-inventory -v --list -i inventory.yml
 ```
@@ -167,7 +167,7 @@ This playbook performs the following tasks on SWITCH1 to configure BGP:
 
 5. Save the playbook
 
-6. Run the playbook in the Terminal window using the -i option to specify the dynamic inventory configuration file in the current directory. The reference playbook should execute successfully.
+6. Run the playbook in the Terminal window using the -`i` option to specify the dynamic inventory configuration file in the current directory. The reference playbook should execute successfully.
 ```bash
 ansible-playbook init-routing-bgp.yml -i inventory.yml 
 ```
@@ -178,30 +178,35 @@ In this section, we will go over some of the essential Arista EOS CLI commands t
 1. On the Linux desktop, open a web browser
 2. In the browser, enter the URL pointing to the ContainerLab Graphite GUI
 `http://<internal IP of Linux desktop>/graphite`
-3. Access the CLI of one of the switches by clicking on the device and clicking on SSH next to the IPv4 option.
-4. Enter `admin` for the username and password. Click Sign in to access the CLI of the switch.
-5. To view a summary of BGP peers along with their adjacency states, use the show ip bgp summary command on the switch. This command provides crucial information such as the remote ASN of the neighbor, the status of the BGP adjacency, and the prefixes that are being advertised to each neighbor.
+
+4. Access the CLI of one of the switches by clicking on the device and clicking on SSH next to the IPv4 option.
+5. Enter "admin" for the username and password. Click Sign in to access the CLI of the switch.
+
+6. To view a summary of BGP peers along with their adjacency states, use the `show ip bgp summary` command on the switch. This command provides crucial information such as the remote ASN of the neighbor, the status of the BGP adjacency, and the prefixes that are being advertised to each neighbor.
 `show ip bgp summary`
-6. To obtain more comprehensive BGP routing information, you can use the show ip bgp command to display the BGP routing table. This table contains detailed path metrics for each destination, including the local preference, AS path length, and path origin. This information is particularly useful for administrators who need to perform BGP traffic engineering.
+
+7. To obtain more comprehensive BGP routing information, you can use the `show ip bgp` command to display the BGP routing table. This table contains detailed path metrics for each destination, including the local preference, AS path length, and path origin. This information is particularly useful for administrators who need to perform BGP traffic engineering.
 `show ip bgp`
-7. To display the current BGP routes in the switch’s routing table, use the show ip route bgp command. Each switch should receive eight External BGP (eBGP) routes among its two peers.
+
+8. To display the current BGP routes in the switch’s routing table, use the `show ip route bgp` command. Each switch should receive eight External BGP (eBGP) routes among its two peers.
 `show ip route bgp`
-8. Finally, to verify that BGP MD5 peer authentication is enabled, use the show bgp neighbors | grep auth command. In the full output of the command, this information is shown near the end of each peer’s section.  
+
+9. Finally, to verify that BGP MD5 peer authentication is enabled, use the `show bgp neighbors | grep auth` command. In the full output of the command, this information is shown near the end of each peer’s section.  
 `show bgp neighbors | grep auth`
 
 ## Prometheus
 
 In this section, we will walk through how to set up OCPrometheus using an Ansible playbook. This will automate the process of initializing it on the network devices by using the dynamic inventory. 
 
-1. Ansible can be used to configure OCPrometheus on all devices referenced in the dynamic inventory file. Create a new file titled “init-prometheus.yml” for the playbook.  
+1. Ansible can be used to configure OCPrometheus on all devices referenced in the dynamic inventory file. Create a new file titled `init-prometheus.yml` for the playbook.  
 
-2. Create the first play on SWITCH1 to configure the switch and copy the files from the Linux machine to the switch. Use the ansible.builtin.copy module to transfer the ocprometheus file from its location on the local device to the switch. Ensure it is placed in the /mnt/flash/ directory on the switch.
+2. Create the first play on SWITCH1 to configure the switch and copy the files from the Linux machine to the switch. Use the `ansible.builtin.copy` module to transfer the ocprometheus file from its location on the local device to the switch. Ensure it is placed in the `/mnt/flash/` directory on the switch.
 
-3. Create the second play. It is identical to the first except that this time the ocprometheus.yml file will be transferred from the local machine to the switch.
+3. Create the second play. It is identical to the first except that this time the `ocprometheus.yml` file will be transferred from the local machine to the switch.
 
-4. Create the third play. This will create ACLs on the switch using the arista.eos.eos_config module using the arista.eos.eos_config module. 
+4. Create the third play. This will create an ACL on the switch using the `arista.eos.eos_config` module.
 
-5. Create the fourth play. This will initialize the Prometheus Daemon on SWITCH1 using the arista.eos.eos_command module.
+5. Create the fourth play. This will initialize the Prometheus Daemon on SWITCH1 using the `arista.eos.eos_command` module.
 
 6. Copy the previous plays in the playbook twice, once for SWITCH2 and once for SWITCH3. Ensure to alter the names and hosts areas to reflect each switch name.
 
