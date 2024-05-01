@@ -1,0 +1,77 @@
+__________FORMATTING REPORT__________
+2 files left unchanged
+
+
+__________LINTING REPORT__________
+************* Module jobs
+jobs/__init__.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+************* Module jobs.cve_job
+jobs/cve_job.py:149:0: C0301: Line too long (104/100) (line-too-long)
+jobs/cve_job.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+jobs/cve_job.py:1:0: E0401: Unable to import 'nautobot.core.celery' (import-error)
+jobs/cve_job.py:2:0: E0401: Unable to import 'nautobot.apps.jobs' (import-error)
+jobs/cve_job.py:3:0: E0401: Unable to import 'nautobot_device_lifecycle_mgmt.models' (import-error)
+jobs/cve_job.py:5:0: E0401: Unable to import 'selenium' (import-error)
+jobs/cve_job.py:6:0: E0401: Unable to import 'selenium.webdriver.chrome.options' (import-error)
+jobs/cve_job.py:7:0: E0401: Unable to import 'bs4' (import-error)
+jobs/cve_job.py:14:0: C0115: Missing class docstring (missing-class-docstring)
+jobs/cve_job.py:15:4: C0115: Missing class docstring (missing-class-docstring)
+jobs/cve_job.py:15:4: R0903: Too few public methods (0/2) (too-few-public-methods)
+jobs/cve_job.py:22:4: C0116: Missing function or method docstring (missing-function-docstring)
+jobs/cve_job.py:40:8: C0200: Consider using enumerate instead of iterating with range and len (consider-using-enumerate)
+jobs/cve_job.py:55:4: C0116: Missing function or method docstring (missing-function-docstring)
+jobs/cve_job.py:57:19: W3101: Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely (missing-timeout)
+jobs/cve_job.py:62:41: C0103: Variable name "f" doesn't conform to snake_case naming style (invalid-name)
+jobs/cve_job.py:65:4: C0116: Missing function or method docstring (missing-function-docstring)
+jobs/cve_job.py:68:8: R1702: Too many nested blocks (7/5) (too-many-nested-blocks)
+jobs/cve_job.py:99:4: C0116: Missing function or method docstring (missing-function-docstring)
+jobs/cve_job.py:99:4: R0914: Too many local variables (21/15) (too-many-locals)
+jobs/cve_job.py:171:23: C0121: Comparison 'cve_object == None' should be 'cve_object is None' (singleton-comparison)
+jobs/cve_job.py:112:8: R1702: Too many nested blocks (6/5) (too-many-nested-blocks)
+jobs/cve_job.py:184:23: C0121: Comparison 'cve_object != None' should be 'cve_object is not None' (singleton-comparison)
+jobs/cve_job.py:112:8: R1702: Too many nested blocks (6/5) (too-many-nested-blocks)
+jobs/cve_job.py:99:4: R0912: Too many branches (19/12) (too-many-branches)
+jobs/cve_job.py:112:8: R1702: Too many nested blocks (6/5) (too-many-nested-blocks)
+jobs/cve_job.py:8:0: C0411: standard import "import time" should be placed before "from nautobot.core.celery import register_jobs" (wrong-import-order)
+jobs/cve_job.py:10:0: C0411: standard import "import os" should be placed before "from nautobot.core.celery import register_jobs" (wrong-import-order)
+jobs/cve_job.py:11:0: C0411: standard import "import json" should be placed before "from nautobot.core.celery import register_jobs" (wrong-import-order)
+
+------------------------------------------------------------------
+Your code has been rated at 5.38/10 (previous run: 5.38/10, +0.00)
+
+
+
+__________SECURITY SCANNER REPORT__________
+Run started:2024-05-01 18:05:20.076336
+
+Test results:
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.8/plugins/b113_request_without_timeout.html
+   Location: ./jobs/cve_job.py:57:19
+56	        # Send a GET request to the URL
+57	        response = requests.get(url)
+58	
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 180
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 1
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 1
+		Medium: 0
+		High: 0
+Files skipped (0):
+
+
