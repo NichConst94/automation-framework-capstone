@@ -4,7 +4,7 @@ from nautobot_device_lifecycle_mgmt.models import CVELCM, SoftwareLCM
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup 
 import time
 import requests
 import os
