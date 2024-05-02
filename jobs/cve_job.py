@@ -2,7 +2,7 @@ from nautobot.core.celery import register_jobs
 from nautobot.apps.jobs import Job
 from nautobot_device_lifecycle_mgmt.models import CVELCM, SoftwareLCM
 
-from selenium import webdriver 
+from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import time
