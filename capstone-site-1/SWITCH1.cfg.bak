@@ -11,7 +11,6 @@ daemon TerminAttr
 !
 daemon ocprometheus
    exec /sbin/ip netns exec ns-MGMT /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6042 -username admin -password admin
-   no shutdown
 !
 transceiver qsfp default-mode 4x10G
 !
